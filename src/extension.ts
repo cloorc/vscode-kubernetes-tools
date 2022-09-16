@@ -89,6 +89,7 @@ import { LocalTunnelDebugger } from './components/localtunneldebugger/localtunne
 import { setAssetContext } from './assets';
 import { fixOldInstalledBinaryPermissions } from './components/installer/fixwriteablebinaries';
 import { interpolateVariables } from './utils/interpolation';
+import { HelmReleaseNode } from './components/clusterexplorer/node.helmrelease';
 
 let explainActive = false;
 let swaggerSpecPromise: Promise<explainer.SwaggerModel | undefined> | null = null;
@@ -244,7 +245,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<APIBro
         registerCommand('extension.helmTemplatePreview', helmexec.helmTemplatePreview),
         registerCommand('extension.helmLint', helmexec.helmLint),
         registerCommand('extension.helmExportValues', (o: ClusterExplorerHelmReleaseNode) => helmexec.helmExportValues(kubectl, o)),
-        registerCommand('extension.helmGetValues', (o: ClusterExplorerHelmReleaseNode) => helmexec.helmGetValues(kubectl, o)),
+        registerCommand('extension.helmGetValues', (o: HelmReleaseNode) => helmexec.helmGetValues(kubectl, o)),
         registerCommand('extension.helmFetchValues', helmexec.helmFetchValues),
         registerCommand('extension.helmInspectChart', helmexec.helmInspectChart),
         registerCommand('extension.helmDryRun', helmexec.helmDryRun),
@@ -1429,7 +1430,7 @@ async function getContainerQuery(resource: ContainerContainer, containerType: st
         const bits = s.split('\t');
         return { name: bits[0] ? bits[0].trim() : '', image: bits[1] ? bits[1].trim() : '', initContainer: containerType === 'initContainers'};
     });
-    
+
     return containersEx.filter(c => c.name !== '');
 }
 
