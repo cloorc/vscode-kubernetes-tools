@@ -5,7 +5,7 @@
     "version": "1.3.10",
     "publisher": "ms-kubernetes-tools",
     "engines": {
-        "vscode": "^1.52.0"
+        "vscode": "^1.71.0"
     },
     "license": "Apache-2.0",
     "categories": [
@@ -535,6 +535,11 @@
                     "group": "1"
                 },
                 {
+                    "command": "kubernetes.etcdExplorer.refresh",
+                    "when": "view == kubernetes.etcdExplorer",
+                    "group": "navigation"
+                },
+                {
                     "command": "kubernetes.etcdExplorer.addExistingClusters",
                     "when": "view == kubernetes.etcdExplorer",
                     "group": "0"
@@ -643,17 +648,17 @@
                 },
                 {
                     "command": "extension.vsKubernetesNodeShell",
-                    "group": "2@1",
+                    "group": "2@2",
                     "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource\\.node/i"
                 },
                 {
                     "command": "extension.vsKubernetesInstances",
-                    "group": "2@1",
+                    "group": "2@3",
                     "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource\\.(deployment|statefulset|daemonset)/i"
                 },
                 {
                     "command": "extension.vsKubernetesDelete",
-                    "group": "2@2",
+                    "group": "2@4",
                     "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource.*/i"
                 },
                 {
@@ -815,6 +820,11 @@
                     "command": "kubernetes.cloudExplorer.findProviders",
                     "when": "view == kubernetes.cloudExplorer && viewItem == kubernetes.noProviders",
                     "group": "1"
+                },
+                {
+                    "command": "kubernetes.etcdExplorer.getKeyValue",
+                    "when": "view == kubernetes.etcdExplorer",
+                    "group": "0"
                 }
             ],
             "commandPalette": [
@@ -885,6 +895,10 @@
                 {
                     "command": "extension.helmInspectChart",
                     "when": "view === extension.vsKubernetesHelmRepoExplorer"
+                },
+                {
+                    "command": "kubernetes.etcdExplorer.refresh",
+                    "when": "view === extension.etcdExplorer"
                 },
                 {
                     "command": "kubernetes.etcdExplorer.addExistingClusters",
@@ -1143,11 +1157,6 @@
             {
                 "command": "extension.vsKubernetesRefresh",
                 "title": "Refresh",
-                "category": "Kubernetes"
-            },
-            {
-                "command": "extension.vsKubernetesRefresh",
-                "title": "Refresh",
                 "category": "Kubernetes",
                 "icon": {
                     "light": "resources/light/refresh.svg",
@@ -1330,13 +1339,13 @@
                 "category": "Helm"
             },
             {
-                "command": "kubernetes.etcdExplorer.addExistingClusters",
-                "title": "Add cluster",
-                "description": "Add an existing cluster",
+                "command": "kubernetes.etcdExplorer.refresh",
+                "title": "Refresh",
+                "description": "Refresh all clusters",
                 "category": "ETCD",
                 "icon": {
-                    "dark": "images/dark/plus.png",
-                    "light": "images/light/plus.png"
+                    "dark": "images/dark/refresh.svg",
+                    "light": "images/light/refresh.svg"
                 }
             },
             {
@@ -1347,6 +1356,18 @@
                     "light": "images/light/refresh.svg",
                     "dark": "images/dark/refresh.svg"
                 }
+            },
+            {
+                "command": "kubernetes.etcdExplorer.addExistingClusters",
+                "title": "Add cluster",
+                "description": "Add an existing cluster",
+                "category": "ETCD"
+            },
+            {
+                "command": "kubernetes.etcdExplorer.getKeyValue",
+                "title": "Get value",
+                "description": "Get value bound to current key",
+                "category": "ETCD"
             },
             {
                 "command": "kubernetes.cloudExplorer.mergeIntoKubeconfig",
@@ -1452,6 +1473,7 @@
         "docker-file-parser": "^1.0.3",
         "dockerfile-parse": "^0.2.0",
         "download": "^7.1.0",
+        "etcd3": "^1.1.0",
         "fuzzysearch": "^1.0.3",
         "got": "^11.8.2",
         "graceful-fs": "^4.1.11",
@@ -1498,12 +1520,12 @@
         "@types/tmp": "^0.0.33",
         "@types/unzipper": "^0.10.0",
         "@types/uuid": "^3.4.4",
-        "@types/vscode": "^1.52.0",
+        "@types/vscode": "^1.71.0",
         "@types/websocket": "^0.0.40",
         "@types/yamljs": "^0.2.30",
-        "@typescript-eslint/eslint-plugin": "^4.28.1",
-        "@typescript-eslint/eslint-plugin-tslint": "4.28.1",
-        "@typescript-eslint/parser": "^4.28.1",
+        "@typescript-eslint/eslint-plugin": "^5.38.0",
+        "@typescript-eslint/eslint-plugin-tslint": "^5.38.0",
+        "@typescript-eslint/parser": "^5.38.0",
         "electron": "^13.1.4",
         "eslint": "^7.29.0",
         "file-loader": "^6.2.0",
