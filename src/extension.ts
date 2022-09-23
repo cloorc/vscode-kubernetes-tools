@@ -266,6 +266,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<APIBro
         registerCommand('extension.helmDependencies', helmexec.helmDependencies),
         registerCommand('extension.helmConvertToTemplate', helmConvertToTemplate),
         registerCommand('extension.helmParameterise', helmParameterise),
+        // Commands - ETCD
+        registerCommand('kubernetes.etcdExplorer.addExistingClusters', () => {}),
 
         // Commands - API
         registerCommand('kubernetes.cloudExplorer.mergeIntoKubeconfig', kubernetesMergeIntoKubeconfig),
@@ -1691,7 +1693,9 @@ interface DiffResult {
     readonly reason?: string;
 }
 
-async function confirmOperation(prompt: (msg: string, options: vscode.MessageOptions, ...opts: string[]) => Thenable<string>, message: string, confirmVerb: string, operation: () => void): Promise<void> {
+type PromptFunction = (msg: string, options: vscode.MessageOptions, ...opts: string[]) => Promise<string>;
+
+async function confirmOperation(prompt: (msg: string, options: vscode.MessageOptions, ...opts: string[]) => Promise<string>, message: string, confirmVerb: string, operation: () => void): Promise<void> {
     const result = await prompt(message, { modal: true }, confirmVerb);
     if (result === confirmVerb) {
         operation();
@@ -1719,7 +1723,7 @@ const applyKubernetes = () => {
         switch (r.result) {
             case DiffResultKind.Succeeded:
                 confirmOperation(
-                    vscode.window.showInformationMessage,
+                    vscode.window.showInformationMessage as PromptFunction,
                     'Do you wish to apply this change?',
                     'Apply',
                     () => maybeRunKubernetesCommandForActiveWindow('apply', "Kubernetes Applying...")
@@ -1730,7 +1734,7 @@ const applyKubernetes = () => {
                 return;
             case DiffResultKind.NoKindName:
                 confirmOperation(
-                    vscode.window.showWarningMessage,
+                    vscode.window.showWarningMessage as PromptFunction,
                     `Can't show what changes will be applied (${r.reason}). Apply anyway?`,
                     'Apply',
                     () => maybeRunKubernetesCommandForActiveWindow('apply', "Kubernetes Applying...")
@@ -1738,7 +1742,7 @@ const applyKubernetes = () => {
                 return;
             case DiffResultKind.NoClusterResource:
                 confirmOperation(
-                    vscode.window.showWarningMessage,
+                    vscode.window.showWarningMessage as PromptFunction,
                     `Resource ${r.resourceName} does not exist - this will create a new resource.`,
                     'Create',
                     () => maybeRunKubernetesCommandForActiveWindow('create', "Kubernetes Creating...")
@@ -1746,7 +1750,7 @@ const applyKubernetes = () => {
                 return;
             case DiffResultKind.GetFailed:
                 confirmOperation(
-                    vscode.window.showWarningMessage,
+                    vscode.window.showWarningMessage as PromptFunction,
                     `Can't show what changes will be applied - error getting existing resource (${r.stderr}). Apply anyway?`,
                     'Apply',
                     () => maybeRunKubernetesCommandForActiveWindow('apply', "Kubernetes Applying...")

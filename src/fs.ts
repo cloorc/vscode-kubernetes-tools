@@ -22,24 +22,24 @@ export interface FS {
 
 export const fs: FS = {
     chmod: promisify(
-        (path: string, mode: string | number, cb: (err: NodeJS.ErrnoException) => void) =>
+        (path: string, mode: string | number, cb: (err: NodeJS.ErrnoException | null) => void) =>
           sysfs.chmod(path, mode, cb)),
     existsSync: (path) => sysfs.existsSync(path),
-    readFile: (filename, encoding, callback) => sysfs.readFile(filename, encoding, callback),
+    readFile: (filename, encoding, callback) => sysfs.readFile(filename, encoding, callback as (err: NodeJS.ErrnoException | null, data: string) => void),
     readTextFile: promisify(
-        (path: string, cb: (err: NodeJS.ErrnoException, data: string) => void) =>
+        (path: string, cb: (err: NodeJS.ErrnoException | null, data: string) => void) =>
           sysfs.readFile(path, { encoding: 'utf8' }, cb)),
     readFileAsync: promisify(
-        (path: string, cb: (err: NodeJS.ErrnoException, data: Buffer) => void) =>
+        (path: string, cb: (err: NodeJS.ErrnoException | null, data: Buffer) => void) =>
           sysfs.readFile(path, null, cb)),
     readFileSync: (filename, encoding) => sysfs.readFileSync(filename, encoding),
     readFileToBufferSync: (filename) => sysfs.readFileSync(filename),
     renameAsync: promisify(
-        (oldName: string, newName: string, cb: (err: NodeJS.ErrnoException) => void) =>
+        (oldName: string, newName: string, cb: (err: NodeJS.ErrnoException | null) => void) =>
             sysfs.rename(oldName, newName, cb)),
-    writeFile: (filename, data, callback) => sysfs.writeFile(filename, data, callback),
+    writeFile: (filename, data, callback) => sysfs.writeFile(filename, data, callback as (err: NodeJS.ErrnoException | null) => void),
     writeTextFile: promisify(
-        (filename: string, data: string, callback: (err: NodeJS.ErrnoException) => void) => sysfs.writeFile(filename, data, callback)),
+        (filename: string, data: string, callback: (err: NodeJS.ErrnoException) => void) => sysfs.writeFile(filename, data, callback as (err: NodeJS.ErrnoException | null) => void)),
     writeFileSync: (filename, data) => sysfs.writeFileSync(filename, data),
     dirSync: (path) => sysfs.readdirSync(path),
 

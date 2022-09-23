@@ -49,15 +49,15 @@ export class KubernetesResourceVirtualFileSystemProvider implements FileSystemPr
         };
     }
 
-    readDirectory(_uri: Uri): [string, FileType][] | Thenable<[string, FileType][]> {
+    readDirectory(_uri: Uri): [string, FileType][] | Promise<[string, FileType][]> {
         return [];
     }
 
-    createDirectory(_uri: Uri): void | Thenable<void> {
+    createDirectory(_uri: Uri): void | Promise<void> {
         // no-op
     }
 
-    readFile(uri: Uri): Uint8Array | Thenable<Uint8Array> {
+    readFile(uri: Uri): Uint8Array | Promise<Uint8Array> {
         return this.readFileAsync(uri);
     }
 
@@ -116,7 +116,7 @@ export class KubernetesResourceVirtualFileSystemProvider implements FileSystemPr
         }
     }
 
-    writeFile(uri: Uri, content: Uint8Array, _options: { create: boolean; overwrite: boolean }): void | Thenable<void> {
+    writeFile(uri: Uri, content: Uint8Array, _options: { create: boolean; overwrite: boolean }): void | Promise<void> {
         return this.saveAsync(uri, content);  // TODO: respect options
     }
 
@@ -133,11 +133,11 @@ export class KubernetesResourceVirtualFileSystemProvider implements FileSystemPr
         fs.writeFileSync(fspath, content);
     }
 
-    delete(_uri: Uri, _options: { recursive: boolean }): void | Thenable<void> {
+    delete(_uri: Uri, _options: { recursive: boolean }): void | Promise<void> {
         // no-op
     }
 
-    rename(_oldUri: Uri, _newUri: Uri, _options: { overwrite: boolean }): void | Thenable<void> {
+    rename(_oldUri: Uri, _newUri: Uri, _options: { overwrite: boolean }): void | Promise<void> {
         // no-op
     }
 }

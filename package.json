@@ -444,6 +444,10 @@
                 {
                     "id": "kubernetes.cloudExplorer",
                     "name": "Clouds"
+                },
+                {
+                    "id": "kubernetes.etcdExplorer",
+                    "name": "ETCD"
                 }
             ]
         },
@@ -529,6 +533,11 @@
                     "command": "kubernetes.cloudExplorer.findProviders",
                     "when": "view == kubernetes.cloudExplorer",
                     "group": "1"
+                },
+                {
+                    "command": "kubernetes.etcdExplorer.addExistingClusters",
+                    "when": "view == kubernetes.etcdExplorer",
+                    "group": "0"
                 }
             ],
             "view/item/context": [
@@ -876,6 +885,10 @@
                 {
                     "command": "extension.helmInspectChart",
                     "when": "view === extension.vsKubernetesHelmRepoExplorer"
+                },
+                {
+                    "command": "kubernetes.etcdExplorer.addExistingClusters",
+                    "when": "view === extension.etcdExplorer"
                 },
                 {
                     "command": "kubernetes.cloudExplorer.mergeIntoKubeconfig",
@@ -1317,6 +1330,16 @@
                 "category": "Helm"
             },
             {
+                "command": "kubernetes.etcdExplorer.addExistingClusters",
+                "title": "Add cluster",
+                "description": "Add an existing cluster",
+                "category": "ETCD",
+                "icon": {
+                    "dark": "images/dark/plus.png",
+                    "light": "images/light/plus.png"
+                }
+            },
+            {
                 "command": "extension.vsKubernetesRefreshCloudExplorer",
                 "title": "Refresh",
                 "category": "Kubernetes",
@@ -1409,15 +1432,18 @@
         "compile": "npm run compile:ext && npm run compile:view",
         "compile:ext": "webpack --mode none",
         "compile:view": "webpack --mode none --config src/components/logs/webpack.config.js",
-        "watch": "webpack --mode development --watch --info-verbosity verbose",
-        "test-compile": "tsc -p ./",
+        "watch": "webpack --mode development --watch",
+        "test-compile": "./node_modules/.bin/tsc -p ./",
         "test": "npm run test-compile && node ./out/test/runTest.js"
     },
     "extensionDependencies": [
         "redhat.vscode-yaml"
     ],
     "dependencies": {
-        "@kubernetes/client-node": "^0.14.0",
+        "@kubernetes/client-node": "^0.17.1",
+        "@vscode/debugadapter": "^1.57.0",
+        "@vscode/debugprotocol": "^1.57.0",
+        "@vscode/extension-telemetry": "^0.6.2",
         "ajv": "^6.9.1",
         "await-notify": "^1.0.1",
         "clipboardy": "^1.2.3",
@@ -1439,6 +1465,7 @@
         "opn": "^5.2.0",
         "pluralize": "^4.0.0",
         "portfinder": "^1.0.13",
+        "promise": "^8.2.0",
         "rxjs": "^6.5.4",
         "semver": "^5.5.1",
         "shelljs": "^0.7.7",
@@ -1449,9 +1476,6 @@
         "unzipper": "^0.10.5",
         "url-parse": "^1.5.1",
         "uuid": "^3.1.0",
-        "vscode-debugadapter": "1.27.0",
-        "vscode-debugprotocol": "1.27.0",
-        "vscode-extension-telemetry": "^0.1.1",
         "vscode-uri": "^1.0.1",
         "yaml-ast-parser": "^0.0.40",
         "yamljs": "^0.3.0"
@@ -1488,12 +1512,13 @@
         "html-webpack-plugin": "^4.2.0",
         "mocha": "^8.1.3",
         "sinon": "^6.3.5",
-        "ts-loader": "^6.0.4",
-        "tslint": "^5.18.0",
-        "typescript": "^3.5.2",
+        "ts-loader": "^9.4.1",
+        "ts-node": "^10.9.1",
+        "tslint": "^6.1.3",
+        "typescript": "^4.8.3",
         "vscode-test": "^1.4.1",
-        "webpack": "^4.35.2",
-        "webpack-cli": "^3.3.12"
+        "webpack": "^5.74.0",
+        "webpack-cli": "^4.10.0"
     },
     "repository": {
         "type": "git",

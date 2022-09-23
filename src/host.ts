@@ -4,13 +4,13 @@ import { showWorkspaceFolderPick } from './hostutils';
 import { Dictionary } from './utils/dictionary';
 
 export interface Host {
-    showErrorMessage(message: string, ...items: string[]): Thenable<string | undefined>;
-    showWarningMessage(message: string, ...items: string[]): Thenable<string | undefined>;
-    showInformationMessage(message: string, ...items: string[]): Thenable<string | undefined>;
-    showInputBox(options: vscode.InputBoxOptions, token?: vscode.CancellationToken): Thenable<string | undefined>;
-    showQuickPick(items: string[], options: vscode.QuickPickOptions): Thenable<string | undefined>;
-    showQuickPick<T extends vscode.QuickPickItem>(items: T[], options: vscode.QuickPickOptions): Thenable<T | undefined>;
-    withProgress<R>(task: (progress: vscode.Progress<{ message?: string }>) => Thenable<R>): Thenable<R>;
+    showErrorMessage(message: string, ...items: string[]): Promise<string | undefined>;
+    showWarningMessage(message: string, ...items: string[]): Promise<string | undefined>;
+    showInformationMessage(message: string, ...items: string[]): Promise<string | undefined>;
+    showInputBox(options: vscode.InputBoxOptions, token?: vscode.CancellationToken): Promise<string | undefined>;
+    showQuickPick(items: string[], options: vscode.QuickPickOptions): Promise<string | undefined>;
+    showQuickPick<T extends vscode.QuickPickItem>(items: T[], options: vscode.QuickPickOptions): Promise<T | undefined>;
+    withProgress<R>(task: (progress: vscode.Progress<{ message?: string }>) => Promise<R>): Promise<R>;
     getConfiguration(key: string): any;
     createTerminal(name?: string, shellPath?: string, shellArgs?: string[]): vscode.Terminal;
     onDidCloseTerminal(listener: (e: vscode.Terminal) => any): vscode.Disposable;
@@ -45,28 +45,28 @@ export interface LongRunningUIOptions {
     readonly operationKey?: string;
 }
 
-function showInputBox(options: vscode.InputBoxOptions, token?: vscode.CancellationToken): Thenable<string | undefined> {
-    return vscode.window.showInputBox(options, token);
+function showInputBox(options: vscode.InputBoxOptions, token?: vscode.CancellationToken): Promise<string | undefined> {
+    return vscode.window.showInputBox(options, token) as Promise<string | undefined>;
 }
 
-function showErrorMessage(message: string, ...items: string[]): Thenable<string | undefined> {
-    return vscode.window.showErrorMessage(message, ...items);
+function showErrorMessage(message: string, ...items: string[]): Promise<string | undefined> {
+    return vscode.window.showErrorMessage(message, ...items) as Promise<string | undefined>;
 }
 
-function showWarningMessage(message: string, ...items: string[]): Thenable<string | undefined> {
-    return vscode.window.showWarningMessage(message, ...items);
+function showWarningMessage(message: string, ...items: string[]): Promise<string | undefined> {
+    return vscode.window.showWarningMessage(message, ...items) as Promise<string | undefined> ;
 }
 
-function showInformationMessage(message: string, ...items: string[]): Thenable<string | undefined> {
-    return vscode.window.showInformationMessage(message, ...items);
+function showInformationMessage(message: string, ...items: string[]): Promise<string | undefined> {
+    return vscode.window.showInformationMessage(message, ...items) as Promise<string | undefined>;
 }
 
-function showQuickPickStr(items: string[], options?: vscode.QuickPickOptions): Thenable<string | undefined> {
-    return vscode.window.showQuickPick(items, options);
+function showQuickPickStr(items: string[], options?: vscode.QuickPickOptions): Promise<string | undefined> {
+    return vscode.window.showQuickPick(items, options) as Promise<string | undefined>;
 }
 
-function showQuickPickT<T extends vscode.QuickPickItem>(items: T[], options?: vscode.QuickPickOptions): Thenable<T | undefined> {
-    return vscode.window.showQuickPick(items, options);
+function showQuickPickT<T extends vscode.QuickPickItem>(items: T[], options?: vscode.QuickPickOptions): Promise<T | undefined> {
+    return vscode.window.showQuickPick(items, options) as Promise<T | undefined>;
 }
 
 function showQuickPickAny(items: any, options: vscode.QuickPickOptions): any {
@@ -86,8 +86,8 @@ function showQuickPickAny(items: any, options: vscode.QuickPickOptions): any {
     }
 }
 
-function withProgress<R>(task: (progress: vscode.Progress<{ message?: string }>) => Thenable<R>): Thenable<R> {
-    return vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, task);
+function withProgress<R>(task: (progress: vscode.Progress<{ message?: string }>) => Promise<R>): Promise<R> {
+    return vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, task) as Promise<R>;
 }
 
 function getConfiguration(key: string): any {

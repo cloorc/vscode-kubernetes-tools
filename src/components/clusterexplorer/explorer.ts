@@ -110,7 +110,7 @@ export class KubernetesExplorer implements vscode.TreeDataProvider<ClusterExplor
         );
     }
 
-    getTreeItem(element: ClusterExplorerNode): vscode.TreeItem | Thenable<vscode.TreeItem> {
+    getTreeItem(element: ClusterExplorerNode): vscode.TreeItem | Promise<vscode.TreeItem> {
         const baseTreeItem = element.getTreeItem();
 
         const extensionAwareTreeItem = providerResult.transform(baseTreeItem, (ti) => {

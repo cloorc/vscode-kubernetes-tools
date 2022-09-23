@@ -96,8 +96,8 @@ export async function mergeToKubeconfig(newConfigText: string): Promise<void> {
     const kcfileExists = await fs.existsAsync(kcfile);
 
     const kubeconfigText = kcfileExists ? await fs.readTextFile(kcfile) : '';
-    const kubeconfig = yaml.safeLoad(kubeconfigText) || {};
-    const newConfig = yaml.safeLoad(newConfigText);
+    const kubeconfig: any = yaml.safeLoad(kubeconfigText) || {};
+    const newConfig: any = yaml.safeLoad(newConfigText);
 
     for (const section of ['clusters', 'contexts', 'users']) {
         const existing: Named[] | undefined = kubeconfig[section];

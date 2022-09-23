@@ -128,7 +128,7 @@ class KubectlImpl implements Kubectl {
     }
     async invokeInNewTerminal(command: string, terminalName: string, onClose?: (e: Terminal) => any, pipeTo?: string): Promise<Disposable> {
         const terminal = this.context.host.createTerminal(terminalName);
-        const disposable = this.context.host.onDidCloseTerminal(onClose ? onClose : onCloseDefault(terminal.processId));
+        const disposable = this.context.host.onDidCloseTerminal(onClose ? onClose : onCloseDefault(terminal.processId as Promise<number | undefined>));
         await invokeInTerminal(this.context, command, pipeTo, terminal);
         return disposable;
     }
@@ -296,7 +296,7 @@ class KubectlImpl implements Kubectl {
     }
 }
 
-function onCloseDefault(processId: Thenable<number | undefined>): (e: Terminal) => any {
+function onCloseDefault(processId: Promise<number | undefined>): (e: Terminal) => any {
     return async (t) => {
         if (t.exitStatus
             && t.exitStatus.code) {
