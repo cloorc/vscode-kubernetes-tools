@@ -93,7 +93,8 @@ export class EtcdExplorer implements vscode.TreeDataProvider<EtcdObject> {
     }
 }
 
-export async function addEtcdExistingCluster(etcdExplorer: EtcdExplorer, context: vscode.ExtensionContext) {
+// TODO add remove cluster support
+export async function addExistingEtcdCluster(etcdExplorer: EtcdExplorer, context: vscode.ExtensionContext) {
     const hosts = await vscode.window.showInputBox({ prompt: `Please specify hosts of the existing cluster:`, placeHolder: `127.0.0.1:2379` });
     if (!hosts) {
         vscode.window.showErrorMessage(`Cluster hosts is required.`);
@@ -102,18 +103,22 @@ export async function addEtcdExistingCluster(etcdExplorer: EtcdExplorer, context
     const name = await vscode.window.showInputBox({ prompt: `Please specify the cluster name:`, placeHolder: hosts });
     const state: string | undefined = context.globalState.get(STATE);
     const clusters: Cluster[] = JSON.parse(state || "[]");
+    const validClusters: Cluster[] = [];
     let exists = false;
     for (const cluster of clusters) {
+        if (!cluster.name || !cluster.options) {
+            continue;
+        }
         if (cluster.name === name) {
             cluster.options = { hosts: hosts };
             exists = true;
-            break;
         }
+        validClusters.push(cluster);
     }
     if (!exists) {
-        clusters.push({ name: name || hosts, options: { hosts: hosts } });
+        validClusters.push({ name: name || hosts, options: { hosts: hosts } });
     }
-    context.globalState.update(STATE, JSON.stringify(clusters));
+    context.globalState.update(STATE, JSON.stringify(validClusters));
     etcdExplorer.refresh();
 }
 

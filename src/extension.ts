@@ -90,7 +90,8 @@ import { setAssetContext } from './assets';
 import { fixOldInstalledBinaryPermissions } from './components/installer/fixwriteablebinaries';
 import { HelmReleaseNode } from './components/clusterexplorer/node.helmrelease';
 import { ResourceNode } from './components/clusterexplorer/node.resource';
-import * as etcd from './etcd.exec';
+import * as etcd from './etcdcluster';
+import * as minio from './miniocluster';
 
 let explainActive = false;
 let swaggerSpecPromise: Promise<explainer.SwaggerModel | undefined> | null = null;
@@ -154,6 +155,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<APIBro
     const helmSymbolProvider = new HelmDocumentSymbolProvider();
     const completionProvider = new HelmTemplateCompletionProvider();
     const etcdExplorer = etcd.create(host, context);
+    const minioExplorer = minio.create(host, context);
 
     const completionFilter = [
         "helm",
@@ -270,8 +272,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<APIBro
         registerCommand('extension.helmParameterise', helmParameterise),
         // Commands - ETCD
         registerCommand('kubernetes.etcdExplorer.refresh', (node: etcd.EtcdObject) => etcdExplorer.refresh(node)),
-        registerCommand('kubernetes.etcdExplorer.addExistingClusters', () => etcd.addEtcdExistingCluster(etcdExplorer, context)),
+        registerCommand('kubernetes.etcdExplorer.addExistingClusters', () => etcd.addExistingEtcdCluster(etcdExplorer, context)),
         registerCommand('kubernetes.etcdExplorer.getKeyValue', (node: etcd.EtcdObject) => etcd.getKeyValue(node)),
+
+        // Commands - Minio
+        registerCommand('kubernetes.minioExplorer.refresh', (node: minio.MinioObject) => minioExplorer.refresh(node)),
+        registerCommand('kubernetes.minioExplorer.addExistingClusters', () => minio.addExistingMinioCluster(minioExplorer, context)),
+        registerCommand('kubernetes.minioExplorer.getContent', (node: minio.MinioObject) => minio.getContent(node)),
 
         // Commands - API
         registerCommand('kubernetes.cloudExplorer.mergeIntoKubeconfig', kubernetesMergeIntoKubeconfig),
@@ -313,6 +320,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<APIBro
         vscode.window.registerTreeDataProvider('extension.vsKubernetesHelmRepoExplorer', helmRepoTreeProvider),
         vscode.window.registerTreeDataProvider('kubernetes.cloudExplorer', cloudExplorer),
         vscode.window.registerTreeDataProvider('kubernetes.etcdExplorer', etcdExplorer),
+        vscode.window.registerTreeDataProvider('kubernetes.minioExplorer', minioExplorer),
 
         // Temporarily loaded resource providers
         vscode.workspace.registerFileSystemProvider(K8S_RESOURCE_SCHEME, resourceDocProvider, { /* TODO: case sensitive? */ }),
