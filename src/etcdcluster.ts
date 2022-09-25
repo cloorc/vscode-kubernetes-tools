@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
-import { affectsUs } from "./components/config/config";
 import { Host } from "./host";
 import { Etcd3 } from 'etcd3';
+import { AbstractCluster, AbstractClusterExplorer, AbstractObject } from "./abstractcluster";
 
 export const STATE = "ms-kubernetes-tools.vscode-kubernetes-tools.etcd-explorer";
 
@@ -10,7 +10,7 @@ export interface Cluster {
     options: any;
 }
 
-export class EtcdObject {
+export class EtcdObject implements AbstractObject<EtcdObject> {
     readonly name: string;
     options: string | undefined;
     key: string | undefined;
@@ -53,36 +53,17 @@ export class EtcdObject {
     }
 }
 
-export class EtcdExplorer implements vscode.TreeDataProvider<EtcdObject> {
+export class EtcdExplorer extends AbstractClusterExplorer<EtcdObject> {
+    protected name(cluster: AbstractCluster): string {
+        return (cluster as Cluster).name || JSON.stringify(cluster);
+    }
     readonly context: vscode.ExtensionContext;
-    private onDidChangeTreeDataEmitter: vscode.EventEmitter<EtcdObject | undefined> = new vscode.EventEmitter<EtcdObject | undefined>();
-    readonly onDidChangeTreeData: vscode.Event<EtcdObject | undefined> = this.onDidChangeTreeDataEmitter.event;
     constructor(host: Host, context: vscode.ExtensionContext) {
+        super(host, context);
         this.context = context;
-        host.onDidChangeConfiguration((change) => {
-            if (affectsUs(change)) {
-                this.refresh();
-            }
-        });
     }
 
-    getTreeItem(element: EtcdObject): vscode.TreeItem | Promise<vscode.TreeItem> {
-        return element.getTreeItem();
-    }
-
-    getChildren(parent?: EtcdObject): vscode.ProviderResult<EtcdObject[]> {
-        if (parent) {
-            return parent.getChildren();
-        }
-
-        return this.getEtcdClusters();
-    }
-
-    async refresh(node?: EtcdObject): Promise<void> {
-        this.onDidChangeTreeDataEmitter.fire(node);
-    }
-
-    private async getEtcdClusters(): Promise<EtcdObject[]> {
+    protected async getClusters(): Promise<EtcdObject[]> {
         const rawClusters: string = this.context.globalState.get(STATE) || "[]";
         const clusters: Cluster[] = JSON.parse(rawClusters);
         return Promise.resolve(clusters.map((cluster) => {
@@ -91,9 +72,12 @@ export class EtcdExplorer implements vscode.TreeDataProvider<EtcdObject> {
             return new EtcdObject(cluster.name, false, undefined, "/", etcd);
         }));
     }
+
+    public async removeClusters() {
+        super.removeClusters(STATE);
+    }
 }
 
-// TODO add remove cluster support
 export async function addExistingEtcdCluster(etcdExplorer: EtcdExplorer, context: vscode.ExtensionContext) {
     const hosts = await vscode.window.showInputBox({ prompt: `Please specify hosts of the existing cluster:`, placeHolder: `127.0.0.1:2379` });
     if (!hosts) {

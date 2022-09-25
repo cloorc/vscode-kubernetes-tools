@@ -35,6 +35,7 @@ export async function readToList<T>(is: Readable): Promise<T[]> {
             items.push(item);
         });
         is.on("end", finish);
+        is.on("error", finish);
         is.on("close", finish);
     });
 }

@@ -273,11 +273,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<APIBro
         // Commands - ETCD
         registerCommand('kubernetes.etcdExplorer.refresh', (node: etcd.EtcdObject) => etcdExplorer.refresh(node)),
         registerCommand('kubernetes.etcdExplorer.addExistingClusters', () => etcd.addExistingEtcdCluster(etcdExplorer, context)),
+        registerCommand('kubernetes.etcdExplorer.removeClusters', () => etcdExplorer.removeClusters()),
         registerCommand('kubernetes.etcdExplorer.getKeyValue', (node: etcd.EtcdObject) => etcd.getKeyValue(node)),
 
         // Commands - Minio
         registerCommand('kubernetes.minioExplorer.refresh', (node: minio.MinioObject) => minioExplorer.refresh(node)),
         registerCommand('kubernetes.minioExplorer.addExistingClusters', () => minio.addExistingMinioCluster(minioExplorer, context)),
+        registerCommand('kubernetes.minioExplorer.removeClusters', () => minioExplorer.removeClusters()),
         registerCommand('kubernetes.minioExplorer.getContent', (node: minio.MinioObject) => minio.getContent(node)),
 
         // Commands - API

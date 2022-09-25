@@ -1,15 +1,15 @@
 import * as vscode from "vscode";
-import { affectsUs } from "./components/config/config";
 import { Host } from "./host";
 import * as Minio from 'minio';
 import { readToBuffer, readToList } from "./utils/stream";
 import { kubernetes } from "./logger";
+import { AbstractCluster, AbstractClusterExplorer, AbstractObject } from "./abstractcluster";
 
 export const STATE = "ms-kubernetes-tools.vscode-kubernetes-tools.minio-explorer";
 
-export type Cluster = Minio.ClientOptions;
+export type Cluster = Minio.ClientOptions & AbstractCluster;
 
-export class MinioObject {
+export class MinioObject implements AbstractObject<MinioObject> {
     readonly name: string;
     readonly path: string;
     readonly bucket: string | undefined;
@@ -38,14 +38,16 @@ export class MinioObject {
             try {
                 if (!this.bucket) {
                     this.minio!.listBuckets().then((buckets) => {
-                        resolve(buckets.map((bucket) => new MinioObject(bucket.name, "/", false, bucket.name, undefined, this.minio)));
+                        resolve(buckets.map((bucket) => new MinioObject(bucket.name, "", false, bucket.name, undefined, this.minio)));
                     });
                 } else {
                     // TODO add folder/file support
-                    const objects = this.minio!.listObjectsV2(this.bucket!);
+                    const objects = this.minio!.listObjects(this.bucket!, this.path);
                     readToList<Minio.BucketItem>(objects).then((items) => {
                         resolve(items.map((item) => {
-                            return new MinioObject(item.name, `${this.path}/${item.name}`, item.size > 0, this.bucket, undefined, this.minio);
+                            const isFile = !item.prefix && item.name ? true : false;
+                            const path = isFile ? item.name : item.prefix;
+                            return new MinioObject(path.substring(this.path.length), path, isFile, this.bucket, undefined, this.minio);
                         }));
                     });
                 }
@@ -69,36 +71,18 @@ export class MinioObject {
     }
 }
 
-export class MinioExplorer implements vscode.TreeDataProvider<MinioObject> {
+export class MinioExplorer extends AbstractClusterExplorer<MinioObject> {
+    protected name(cluster: AbstractCluster): string {
+        return (cluster as Cluster).endPoint;
+    }
     readonly context: vscode.ExtensionContext;
-    private onDidChangeTreeDataEmitter: vscode.EventEmitter<MinioObject | undefined> = new vscode.EventEmitter<MinioObject | undefined>();
-    readonly onDidChangeTreeData: vscode.Event<MinioObject | undefined> = this.onDidChangeTreeDataEmitter.event;
+
     constructor(host: Host, context: vscode.ExtensionContext) {
+        super(host, context);
         this.context = context;
-        host.onDidChangeConfiguration((change) => {
-            if (affectsUs(change)) {
-                this.refresh();
-            }
-        });
     }
 
-    getTreeItem(element: MinioObject): vscode.TreeItem | Promise<vscode.TreeItem> {
-        return element.getTreeItem();
-    }
-
-    getChildren(parent?: MinioObject): vscode.ProviderResult<MinioObject[]> {
-        if (parent) {
-            return parent.getChildren();
-        }
-
-        return this.getMinioClusters();
-    }
-
-    async refresh(node?: MinioObject): Promise<void> {
-        this.onDidChangeTreeDataEmitter.fire(node);
-    }
-
-    private async getMinioClusters(): Promise<MinioObject[]> {
+    protected async getClusters(): Promise<MinioObject[]> {
         const rawClusters: string = this.context.globalState.get(STATE) || "[]";
         const clusters: Cluster[] = JSON.parse(rawClusters);
         const validClusters: MinioObject[] = [];
@@ -106,7 +90,7 @@ export class MinioExplorer implements vscode.TreeDataProvider<MinioObject> {
             const options = cluster || {};
             try {
                 const uri = vscode.Uri.parse(cluster.endPoint);
-                options.endPoint = uri.authority;
+                options.endPoint = uri.authority.split(":")[0];
                 if (uri.scheme === "https") {
                     options.useSSL = true;
                     options.port = 443;
@@ -121,6 +105,10 @@ export class MinioExplorer implements vscode.TreeDataProvider<MinioObject> {
             }
         }
         return Promise.resolve(validClusters);
+    }
+
+    public async removeClusters(): Promise<void> {
+        return super.removeClusters(STATE);
     }
 }
 
