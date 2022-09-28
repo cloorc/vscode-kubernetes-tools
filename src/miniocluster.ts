@@ -41,7 +41,6 @@ export class MinioObject implements AbstractObject<MinioObject> {
                         resolve(buckets.map((bucket) => new MinioObject(bucket.name, "", false, bucket.name, undefined, this.minio)));
                     });
                 } else {
-                    // TODO add folder/file support
                     const objects = this.minio!.listObjects(this.bucket!, this.path);
                     readToList<Minio.BucketItem>(objects).then((items) => {
                         resolve(items.map((item) => {
