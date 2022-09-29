@@ -92,6 +92,7 @@ import { HelmReleaseNode } from './components/clusterexplorer/node.helmrelease';
 import { ResourceNode } from './components/clusterexplorer/node.resource';
 import * as etcd from './etcdcluster';
 import * as minio from './miniocluster';
+import * as gitlab from './gitlab.explorer';
 
 let explainActive = false;
 let swaggerSpecPromise: Promise<explainer.SwaggerModel | undefined> | null = null;
@@ -156,6 +157,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<APIBro
     const completionProvider = new HelmTemplateCompletionProvider();
     const etcdExplorer = etcd.create(host, context);
     const minioExplorer = minio.create(host, context);
+    const gitlabExplorer = gitlab.create(host, context);
 
     const completionFilter = [
         "helm",
@@ -282,6 +284,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<APIBro
         registerCommand('kubernetes.minioExplorer.removeClusters', () => minioExplorer.removeClusters()),
         registerCommand('kubernetes.minioExplorer.getContent', (node: minio.MinioObject) => minio.getContent(node)),
 
+        // Commands - Minio
+        registerCommand('kubernetes.gitlabExplorer.refresh', (node: gitlab.GitLabObject) => gitlabExplorer.refresh(node)),
+        registerCommand('kubernetes.gitlabExplorer.addExistingRepository', () => gitlab.addExistingGitLabRepository(gitlabExplorer, context)),
+        registerCommand('kubernetes.gitlabExplorer.removeRepository', () => gitlabExplorer.removeClusters()),
+        registerCommand('kubernetes.gitlabExplorer.getContent', (node: gitlab.GitLabObject) => gitlab.getContent(node)),
+
         // Commands - API
         registerCommand('kubernetes.cloudExplorer.mergeIntoKubeconfig', kubernetesMergeIntoKubeconfig),
         registerCommand('kubernetes.cloudExplorer.saveKubeconfig', kubernetesSaveKubeconfig),
@@ -323,6 +331,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<APIBro
         vscode.window.registerTreeDataProvider('kubernetes.cloudExplorer', cloudExplorer),
         vscode.window.registerTreeDataProvider('kubernetes.etcdExplorer', etcdExplorer),
         vscode.window.registerTreeDataProvider('kubernetes.minioExplorer', minioExplorer),
+        vscode.window.registerTreeDataProvider('kubernetes.gitlabExplorer', gitlabExplorer),
 
         // Temporarily loaded resource providers
         vscode.workspace.registerFileSystemProvider(K8S_RESOURCE_SCHEME, resourceDocProvider, { /* TODO: case sensitive? */ }),

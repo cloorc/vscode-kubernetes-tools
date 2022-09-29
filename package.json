@@ -92,6 +92,7 @@
         "onView:kubernetes.cloudExplorer",
         "onView:kubernetes.etcdExplorer",
         "onView:kubernetes.minioExplorer",
+        "onView:kubernetes.gitlabExplorer",
         "onCommand:kubernetes.cloudExplorer.mergeIntoKubeconfig",
         "onCommand:kubernetes.cloudExplorer.saveKubeconfig",
         "onCommand:kubernetes.cloudExplorer.findProviders",
@@ -454,6 +455,10 @@
                 {
                     "id": "kubernetes.minioExplorer",
                     "name": "MinIO"
+                },
+                {
+                    "id": "kubernetes.gitlabExplorer",
+                    "name": "GitLab"
                 }
             ]
         },
@@ -568,6 +573,21 @@
                 {
                     "command": "kubernetes.minioExplorer.removeClusters",
                     "when": "view == kubernetes.minioExplorer",
+                    "group": "0"
+                },
+                {
+                    "command": "kubernetes.gitlabExplorer.refresh",
+                    "when": "view == kubernetes.gitlabExplorer",
+                    "group": "navigation"
+                },
+                {
+                    "command": "kubernetes.gitlabExplorer.addExistingRepository",
+                    "when": "view == kubernetes.gitlabExplorer",
+                    "group": "0"
+                },
+                {
+                    "command": "kubernetes.gitlabExplorer.removeRepository",
+                    "when": "view == kubernetes.gitlabExplorer",
                     "group": "0"
                 }
             ],
@@ -854,7 +874,12 @@
                 },
                 {
                     "command": "kubernetes.minioExplorer.getContent",
-                    "when": "view == kubernetes.etcdExplorer",
+                    "when": "view == kubernetes.minioExplorer",
+                    "group": "0"
+                },
+                {
+                    "command": "kubernetes.gitlabExplorer.getContent",
+                    "when": "view == kubernetes.gitlabExplorer",
                     "group": "0"
                 }
             ],
@@ -950,6 +975,18 @@
                 {
                     "command": "kubernetes.minioExplorer.removeClusters",
                     "when": "view === kubernetes.minioExplorer"
+                },
+                {
+                    "command": "kubernetes.gitlabExplorer.refresh",
+                    "when": "view === kubernetes.gitlabExplorer"
+                },
+                {
+                    "command": "kubernetes.gitlabExplorer.addExistingRepository",
+                    "when": "view === kubernetes.gitlabExplorer"
+                },
+                {
+                    "command": "kubernetes.gitlabExplorer.removeRepository",
+                    "when": "view === kubernetes.gitlabExplorer"
                 },
                 {
                     "command": "kubernetes.cloudExplorer.mergeIntoKubeconfig",
@@ -1451,6 +1488,34 @@
                 "category": "MinIO"
             },
             {
+                "command": "kubernetes.gitlabExplorer.refresh",
+                "title": "Refresh",
+                "description": "Refresh all clusters",
+                "category": "GitLab",
+                "icon": {
+                    "dark": "images/dark/refresh.svg",
+                    "light": "images/light/refresh.svg"
+                }
+            },
+            {
+                "command": "kubernetes.gitlabExplorer.addExistingRepository",
+                "title": "Add repository",
+                "description": "Add an existing cluster",
+                "category": "GitLab"
+            },
+            {
+                "command": "kubernetes.gitlabExplorer.removeRepository",
+                "title": "Remove repository",
+                "description": "Remove an existing cluster",
+                "category": "GitLab"
+            },
+            {
+                "command": "kubernetes.gitlabExplorer.getContent",
+                "title": "Get file content",
+                "description": "Get file content bound to current object",
+                "category": "GitLab"
+            },
+            {
                 "command": "kubernetes.cloudExplorer.mergeIntoKubeconfig",
                 "title": "Merge into Kubeconfig",
                 "description": "Merge the cluster's kubeconfig into your existing kubeconfig"
@@ -1542,6 +1607,8 @@
         "redhat.vscode-yaml"
     ],
     "dependencies": {
+        "@gitbeaker/cli": "^35.7.0",
+        "@gitbeaker/node": "^35.7.0",
         "@kubernetes/client-node": "^0.17.1",
         "@vscode/debugadapter": "^1.57.0",
         "@vscode/debugprotocol": "^1.57.0",
@@ -1556,7 +1623,7 @@
         "download": "^7.1.0",
         "etcd3": "^1.1.0",
         "fuzzysearch": "^1.0.3",
-        "got": "^11.8.2",
+        "got": "^12.5.1",
         "graceful-fs": "^4.1.11",
         "js-yaml": "^3.13.1",
         "lodash": "^4.17.21",

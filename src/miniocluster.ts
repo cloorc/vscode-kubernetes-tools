@@ -5,7 +5,7 @@ import { readToBuffer, readToList } from "./utils/stream";
 import { kubernetes } from "./logger";
 import { AbstractCluster, AbstractClusterExplorer, AbstractObject } from "./abstractcluster";
 
-export const STATE = "ms-kubernetes-tools.vscode-kubernetes-tools.minio-explorer";
+export const MINIO_STATE = "ms-kubernetes-tools.vscode-kubernetes-tools.minio-explorer";
 
 export type Cluster = Minio.ClientOptions & AbstractCluster;
 
@@ -82,7 +82,7 @@ export class MinioExplorer extends AbstractClusterExplorer<MinioObject> {
     }
 
     protected async getClusters(): Promise<MinioObject[]> {
-        const rawClusters: string = this.context.globalState.get(STATE) || "[]";
+        const rawClusters: string = this.context.globalState.get(MINIO_STATE) || "[]";
         const clusters: Cluster[] = JSON.parse(rawClusters);
         const validClusters: MinioObject[] = [];
         for (const cluster of clusters) {
@@ -107,7 +107,7 @@ export class MinioExplorer extends AbstractClusterExplorer<MinioObject> {
     }
 
     public async removeClusters(): Promise<void> {
-        return super.removeClusters(STATE);
+        return super.removeClusters(MINIO_STATE);
     }
 }
 
@@ -120,7 +120,7 @@ export async function addExistingMinioCluster(etcdExplorer: MinioExplorer, conte
     }
     const credential = await vscode.window.showInputBox({ prompt: `Please specify the accesskey/secretkey:`, placeHolder: `accessKey:secretKey` });
     const secret = credential ? credential.split(":") : ["", ""];
-    const state: string | undefined = context.globalState.get(STATE);
+    const state: string | undefined = context.globalState.get(MINIO_STATE);
     const clusters: Cluster[] = JSON.parse(state || "[]");
     const validClusters: Cluster[] = [];
     let exists = false;
@@ -138,7 +138,7 @@ export async function addExistingMinioCluster(etcdExplorer: MinioExplorer, conte
     if (!exists) {
         validClusters.push({ endPoint: endpoint, accessKey: secret[0], secretKey: secret[1] });
     }
-    context.globalState.update(STATE, JSON.stringify(validClusters));
+    context.globalState.update(MINIO_STATE, JSON.stringify(validClusters));
     etcdExplorer.refresh();
 }
 
