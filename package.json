@@ -873,6 +873,11 @@
                     "group": "0"
                 },
                 {
+                    "command": "kubernetes.etcdExplorer.delete",
+                    "when": "view == kubernetes.etcdExplorer",
+                    "group": "0"
+                },
+                {
                     "command": "kubernetes.minioExplorer.getContent",
                     "when": "view == kubernetes.minioExplorer",
                     "group": "0"
@@ -1457,6 +1462,12 @@
                 "command": "kubernetes.etcdExplorer.getKeyValue",
                 "title": "Get value",
                 "description": "Get value bound to current key",
+                "category": "ETCD"
+            },
+            {
+                "command": "kubernetes.etcdExplorer.delete",
+                "title": "Delete",
+                "description": "Delete current key from cluster",
                 "category": "ETCD"
             },
             {

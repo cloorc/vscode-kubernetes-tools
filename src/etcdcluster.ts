@@ -78,6 +78,17 @@ export class EtcdExplorer extends AbstractClusterExplorer<EtcdObject> {
     }
 }
 
+export async function delKeyFromEtcdCluster(node: EtcdObject) {
+    const confirm = await vscode.window.showWarningMessage(`Are you sure to remove key: ${JSON.stringify(node.key)}?`, { modal: true }, "Yes", "No");
+    if ("yes" === confirm?.toLowerCase()) {
+        node.etcd3?.delete().key(node.key!).exec().then(() => {
+            vscode.window.showInformationMessage(`Successfully deleted key ${node.key} from cluster.`);
+        }, (err) => {
+            vscode.window.showInformationMessage(`Unable to delete key ${node.key} from cluster : ${err}`);
+        });
+    }
+}
+
 export async function addExistingEtcdCluster(etcdExplorer: EtcdExplorer, context: vscode.ExtensionContext) {
     const hosts = await vscode.window.showInputBox({ prompt: `Please specify hosts of the existing cluster:`, placeHolder: `127.0.0.1:2379` });
     if (!hosts) {
