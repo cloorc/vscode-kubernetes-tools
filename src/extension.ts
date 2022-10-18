@@ -1728,10 +1728,10 @@ async function confirmOperation(prompt: (msg: string, options: vscode.MessageOpt
 }
 
 async function editKubernetes(kubectl: Kubectl, node: ClusterExplorerResourceNode) {
-    const ns = node.namespace;
+    const ns = node.namespace ;
     const kind = node.kindName;
-    await kubectl.legacySpawnAsChild(["edit", kind, "--namespace", ns, node.name], { title: `Kubectl: editing ${node.kindName}/${node.name} ... ` });
-    kubectl.legacyInvokeAsync(`get ${node.kindName} -n ${node.namespace} -o yaml`).then((sr) => {
+    // await kubectl.legacySpawnAsChild(["edit", kind, "--namespace", ns], { title: `Kubectl: editing ${kind} ... ` });
+    kubectl.legacyInvokeAsync(`get ${kind} -n "${ns}" -o yaml`).then((sr) => {
         if (sr && sr.code === 0) {
             vscode.workspace.openTextDocument({ language: "yaml", content: sr.stdout }).then((doc) => {
                 vscode.window.showTextDocument(doc);
