@@ -1480,31 +1480,31 @@
                 "command": "kubernetes.etcdExplorer.addExistingClusters",
                 "title": "Add cluster",
                 "description": "Add an existing cluster",
-                "category": "ETCD"
+                "category": "Kubernetes-ETCD"
             },
             {
                 "command": "kubernetes.etcdExplorer.removeClusters",
                 "title": "Remove cluster",
                 "description": "Remove an existing cluster",
-                "category": "ETCD"
+                "category": "Kubernetes-ETCD"
             },
             {
                 "command": "kubernetes.etcdExplorer.getKeyValue",
                 "title": "Get value",
                 "description": "Get value bound to current key",
-                "category": "ETCD"
+                "category": "Kubernetes-ETCD"
             },
             {
                 "command": "kubernetes.etcdExplorer.delete",
                 "title": "Delete",
                 "description": "Delete current key from cluster",
-                "category": "ETCD"
+                "category": "Kubernetes-ETCD"
             },
             {
                 "command": "kubernetes.minioExplorer.refresh",
                 "title": "Refresh",
                 "description": "Refresh all clusters",
-                "category": "MinIO",
+                "category": "Kubernetes-MinIO",
                 "icon": {
                     "dark": "images/dark/refresh.svg",
                     "light": "images/light/refresh.svg"
@@ -1514,25 +1514,25 @@
                 "command": "kubernetes.minioExplorer.addExistingClusters",
                 "title": "Add cluster",
                 "description": "Add an existing cluster",
-                "category": "MinIO"
+                "category": "Kubernetes-MinIO"
             },
             {
                 "command": "kubernetes.minioExplorer.removeClusters",
                 "title": "Remove cluster",
                 "description": "Remove an existing cluster",
-                "category": "MinIO"
+                "category": "Kubernetes-MinIO"
             },
             {
                 "command": "kubernetes.minioExplorer.getContent",
                 "title": "Get file content",
                 "description": "Get file content bound to current object",
-                "category": "MinIO"
+                "category": "Kubernetes-MinIO"
             },
             {
                 "command": "kubernetes.gitlabExplorer.refresh",
                 "title": "Refresh",
                 "description": "Refresh all clusters",
-                "category": "GitLab",
+                "category": "Kubernetes-GitLab",
                 "icon": {
                     "dark": "images/dark/refresh.svg",
                     "light": "images/light/refresh.svg"
@@ -1542,31 +1542,25 @@
                 "command": "kubernetes.gitlabExplorer.addExistingRepository",
                 "title": "Add repository",
                 "description": "Add an existing cluster",
-                "category": "GitLab"
+                "category": "Kubernetes-GitLab"
             },
             {
                 "command": "kubernetes.gitlabExplorer.removeRepository",
                 "title": "Remove repository",
                 "description": "Remove an existing cluster",
-                "category": "GitLab"
+                "category": "Kubernetes-GitLab"
             },
             {
                 "command": "kubernetes.gitlabExplorer.getContent",
                 "title": "Get the file content",
                 "description": "Get file content bound to current object",
-                "category": "GitLab"
+                "category": "Kubernetes-GitLab"
             },
             {
-                "command": "kubernetes.gitlabExplorer.addFile",
-                "title": "Create a file",
-                "description": "Create new file in here",
-                "category": "GitLab"
-            },
-            {
-                "command": "kubernetes.gitlabExplorer.addFolder",
-                "title": "Create a subfolder",
-                "description": "Create subfolder in here",
-                "category": "GitLab"
+                "command": "kubernetes.gitlabExplorer.submitContent",
+                "title": "Submit content to remote",
+                "description": "Submit content to remote repository",
+                "category": "Kubernetes-GitLab"
             },
             {
                 "command": "kubernetes.cloudExplorer.mergeIntoKubeconfig",

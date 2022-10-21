@@ -294,6 +294,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<APIBro
         registerCommand('kubernetes.gitlabExplorer.addExistingRepository', () => gitlab.addExistingGitLabRepository(gitlabExplorer, context)),
         registerCommand('kubernetes.gitlabExplorer.removeRepository', () => gitlabExplorer.removeClusters()),
         registerCommand('kubernetes.gitlabExplorer.getContent', (node: gitlab.GitLabObject) => gitlab.getContent(node)),
+        registerCommand('kubernetes.gitlabExplorer.submitContent', () => gitlabExplorer.submitContentToRepository()),
 
         // Commands - API
         registerCommand('kubernetes.cloudExplorer.mergeIntoKubeconfig', kubernetesMergeIntoKubeconfig),

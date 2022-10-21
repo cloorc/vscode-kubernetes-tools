@@ -48,6 +48,11 @@ export class GitLabObject implements AbstractObject<GitLabObject> {
         const item = this.file ? new vscode.TreeItem(this.name, vscode.TreeItemCollapsibleState.None) :
             new vscode.TreeItem(this.name, vscode.TreeItemCollapsibleState.Collapsed);
         if (this.file) {
+            item.command = {
+                command: "kubernetes.gitlabExplorer.getContent",
+                title: "Get the file content",
+                arguments: [this]
+            };
             item.contextValue = "gitlabfile";
         } else {
             item.contextValue = "gitlabfolder";
@@ -75,12 +80,13 @@ export class GitLabExplorer extends AbstractClusterExplorer<GitLabObject> {
             const options = cluster || {};
             try {
                 const uri = vscode.Uri.parse(options.host);
+                const repo = uri.path.substring(1);
                 const client = new Gitlab({
                     ...options,
                     host: `${uri.scheme}://${uri.authority}`,
                     version: 4
                 });
-                validClusters.push(new GitLabObject(cluster.host, uri.path.substring(1), "/", false, undefined, undefined, client));
+                validClusters.push(new GitLabObject(cluster.host, repo, "/", false, undefined, undefined, client));
             } catch (err) {
                 kubernetes.log(`Skip invalid cluster: ${JSON.stringify(cluster)}(${JSON.stringify(err)})`);
             }
@@ -90,6 +96,35 @@ export class GitLabExplorer extends AbstractClusterExplorer<GitLabObject> {
 
     public async removeClusters(): Promise<void> {
         return super.removeClusters(GITLAB_STATE);
+    }
+
+    public async submitContentToRepository(): Promise<void> {
+        const rawClusters: string = this.context.globalState.get(GITLAB_STATE) || "[]";
+        const clusters: Repository[] = JSON.parse(rawClusters);
+        const text = await vscode.window.showQuickPick(clusters.map((c) => c.host), { canPickMany: false });
+        const cluster = clusters.filter((c) => text === c.host)[0];
+        if (cluster) {
+            const path = await vscode.window.showInputBox({ title: `Please specify file path and name:` });
+            if (path) {
+                const content = Buffer.from(await vscode.window.activeTextEditor?.document.getText() || "").toString("base64");
+                const uri = vscode.Uri.parse(cluster.host);
+                const repo = uri.path.substring(1);
+                const client = new Gitlab({
+                    ...cluster,
+                    host: `${uri.scheme}://${uri.authority}`,
+                    version: 4
+                });
+                client.RepositoryFiles.show(repo, path, "master", undefined).then((_) => {
+                    client.RepositoryFiles.edit(repo, path, "master", content, "Submit from kubernetes gitlab explorer",
+                        { encoding: "base64" });
+                }).catch((_) => {
+                    client.RepositoryFiles.create(repo, path, "master", content, "Submit from kubernetes gitlab explorer",
+                        { encoding: "base64" });
+                });
+            }
+        } else {
+            vscode.window.showInformationMessage(`Kubectl: cluster not selected.`);
+        }
     }
 }
 
