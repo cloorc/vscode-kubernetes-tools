@@ -458,7 +458,7 @@
                 },
                 {
                     "id": "kubernetes.gitlabExplorer",
-                    "name": "GitLab"
+                    "name": "GitLab Files"
                 }
             ]
         },

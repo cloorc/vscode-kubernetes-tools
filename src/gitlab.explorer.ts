@@ -168,7 +168,118 @@ export async function getContent(node: GitLabObject): Promise<void> {
         if (node.gitlab) {
             const value = await node.gitlab.RepositoryFiles.showRaw(node.repo, node.path);
             if (value) {
-                vscode.workspace.openTextDocument({ language: "plaintext", content: value }).then((d) => {
+                let language = "plaintext";
+                const extension = (node.path.match(/.*\.([^.]+)/) || [])[1];
+                if (extension) {
+                    switch (extension.toLowerCase()) {
+                        case "md":
+                            language = "markdown";
+                            break;
+                        case "abap":
+                            language = "abap";
+                            break;
+                        case "bibtex":
+                            language = "bibtex";
+                            break;
+                        case "coffeescript":
+                            language = "coffeescript";
+                            break;
+                        case "csharp":
+                            language = "csharp";
+                            break;
+                        case "cuda-cpp":
+                            language = "cuda-cpp";
+                            break;
+                        case "dockerfile":
+                            language = "dockerfile";
+                            break;
+                        case "fsharp":
+                            language = "fsharp";
+                            break;
+                        case "git-commit":
+                            language = "git-commit";
+                            break;
+                        case "git-rebase":
+                            language = "git-rebase";
+                            break;
+                        case "groovy":
+                            language = "groovy";
+                            break;
+                        case "handlebars":
+                            language = "handlebars";
+                            break;
+                        case "haml":
+                            language = "haml";
+                            break;
+                        case "javascript":
+                            language = "javascript";
+                            break;
+                        case "javascriptreact":
+                            language = "javascriptreact";
+                            break;
+                        case "jsonc":
+                            language = "jsonc";
+                            break;
+                        case "latex":
+                            language = "latex";
+                            break;
+                        case "makefile":
+                            language = "makefile";
+                            break;
+                        case "objective-c":
+                            language = "objective-c";
+                            break;
+                        case "objective-cpp":
+                            language = "objective-cpp";
+                            break;
+                        case "powershell":
+                            language = "powershell";
+                            break;
+                        case "jade,":
+                            language = "jade,";
+                            break;
+                        case "pug":
+                            language = "pug";
+                            break;
+                        case "python":
+                            language = "python";
+                            break;
+                        case "razor":
+                            language = "razor";
+                            break;
+                        case "ruby":
+                            language = "ruby";
+                            break;
+                        case "rust":
+                            language = "rust";
+                            break;
+                        case "shaderlab":
+                            language = "shaderlab";
+                            break;
+                        case "shellscript":
+                            language = "shellscript";
+                            break;
+                        case "slim":
+                            language = "slim";
+                            break;
+                        case "stylus":
+                            language = "stylus";
+                            break;
+                        case "typescript":
+                            language = "typescript";
+                            break;
+                        case "typescriptreact":
+                            language = "typescriptreact";
+                            break;
+                        case "vue-html":
+                            language = "vue-html";
+                            break;
+                        default:
+                            language = extension.toLowerCase();
+                            break;
+                    }
+                }
+                vscode.workspace.openTextDocument({ language, content: value }).then((d) => {
                     vscode.window.showTextDocument(d);
                 });
             } else {
