@@ -295,6 +295,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<APIBro
         registerCommand('kubernetes.gitlabExplorer.removeRepository', () => gitlabExplorer.removeClusters()),
         registerCommand('kubernetes.gitlabExplorer.getContent', (node: gitlab.GitLabObject) => gitlab.getContent(node)),
         registerCommand('kubernetes.gitlabExplorer.submitContent', () => gitlabExplorer.submitContentToRepository()),
+        registerCommand('kubernetes.gitlabExplorer.copyPath', (node: gitlab.GitLabObject) => node.copyPath()),
 
         // Commands - API
         registerCommand('kubernetes.cloudExplorer.mergeIntoKubeconfig', kubernetesMergeIntoKubeconfig),

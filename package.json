@@ -901,6 +901,11 @@
                     "command": "kubernetes.gitlabExplorer.getContent",
                     "when": "view == kubernetes.gitlabExplorer && viewItem == gitlabfile",
                     "group": "0"
+                },
+                {
+                    "command": "kubernetes.gitlabExplorer.copyPath",
+                    "when": "view == kubernetes.gitlabExplorer",
+                    "group": "0"
                 }
             ],
             "commandPalette": [
@@ -1560,6 +1565,12 @@
                 "command": "kubernetes.gitlabExplorer.submitContent",
                 "title": "Submit content to remote",
                 "description": "Submit content to remote repository",
+                "category": "Kubernetes-GitLab"
+            },
+            {
+                "command": "kubernetes.gitlabExplorer.copyPath",
+                "title": "Copy file path",
+                "description": "Copy the path of current object",
                 "category": "Kubernetes-GitLab"
             },
             {

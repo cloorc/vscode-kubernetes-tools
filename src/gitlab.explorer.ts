@@ -5,6 +5,7 @@ import { Resources } from '@gitbeaker/core';
 import { Gitlab } from '@gitbeaker/node';
 import { kubernetes } from "./logger";
 import { AbstractCluster, AbstractClusterExplorer, AbstractObject } from "./abstractcluster";
+import * as clipboard from './components/platform/clipboard';
 
 export const GITLAB_STATE = "ms-kubernetes-tools.vscode-kubernetes-tools.gitlab-explorer";
 
@@ -20,9 +21,12 @@ export class GitLabObject implements AbstractObject<GitLabObject> {
     gitlab: Resources.Gitlab | undefined;
     file: boolean = false;
     repo: string;
+    branch: string;
     readonly token: string | undefined;
     readonly project: number;
-    constructor(name: string, repo: string, path: string, file: boolean, token: string | undefined, options: string | undefined, gitlab: Resources.Gitlab | undefined) {
+    constructor(name: string, repo: string, path: string, file: boolean,
+        branch: string, token: string | undefined, options: string | undefined,
+        gitlab: Resources.Gitlab | undefined) {
         if (!options && !gitlab) {
             throw new Error(`Options or gitlab should be provided at least one.`);
         }
@@ -31,6 +35,7 @@ export class GitLabObject implements AbstractObject<GitLabObject> {
         this.path = path;
         this.file = file;
         this.options = options;
+        this.branch = branch;
         this.token = token;
         this.gitlab = gitlab;
         if (this.options && !this.gitlab) {
@@ -42,7 +47,8 @@ export class GitLabObject implements AbstractObject<GitLabObject> {
             return [];
         }
         const files = await this.gitlab!.Repositories.tree(this.repo, { path: this.path, perPage: 1000 });
-        return files.map((f) => new GitLabObject(f.name, this.repo, f.path, 'blob' === f.type, this.token, this.options, this.gitlab));
+        return files.map((f) => new GitLabObject(f.name, this.repo, f.path, 'blob' === f.type,
+            this.branch, this.token, this.options, this.gitlab));
     }
     getTreeItem(): vscode.TreeItem {
         const item = this.file ? new vscode.TreeItem(this.name, vscode.TreeItemCollapsibleState.None) :
@@ -58,6 +64,12 @@ export class GitLabObject implements AbstractObject<GitLabObject> {
             item.contextValue = "gitlabfolder";
         }
         return item;
+    }
+
+    copyPath() {
+        clipboard.write(this.path).then(() => {
+            vscode.window.showInformationMessage(`Kubernetes: copied gitlab object path ${this.path}`);
+        });
     }
 }
 
@@ -86,7 +98,9 @@ export class GitLabExplorer extends AbstractClusterExplorer<GitLabObject> {
                     host: `${uri.scheme}://${uri.authority}`,
                     version: 4
                 });
-                validClusters.push(new GitLabObject(cluster.host, repo, "/", false, undefined, undefined, client));
+                const project = await client.Projects.show(repo);
+                validClusters.push(new GitLabObject(cluster.host, repo, "/",
+                    false, project.default_branch || "master", undefined, undefined, client));
             } catch (err) {
                 kubernetes.log(`Skip invalid cluster: ${JSON.stringify(cluster)}(${JSON.stringify(err)})`);
             }
@@ -114,11 +128,13 @@ export class GitLabExplorer extends AbstractClusterExplorer<GitLabObject> {
                     host: `${uri.scheme}://${uri.authority}`,
                     version: 4
                 });
-                client.RepositoryFiles.show(repo, path, "master", undefined).then((_) => {
-                    client.RepositoryFiles.edit(repo, path, "master", content, "Submit from kubernetes gitlab explorer",
+                const project = await client.Projects.show(repo);
+                const branch = project.default_branch || "master";
+                client.RepositoryFiles.show(repo, path, branch, undefined).then((_) => {
+                    client.RepositoryFiles.edit(repo, path, branch, content, "Submit from kubernetes gitlab explorer",
                         { encoding: "base64" });
                 }).catch((_) => {
-                    client.RepositoryFiles.create(repo, path, "master", content, "Submit from kubernetes gitlab explorer",
+                    client.RepositoryFiles.create(repo, path, branch, content, "Submit from kubernetes gitlab explorer",
                         { encoding: "base64" });
                 });
             }
