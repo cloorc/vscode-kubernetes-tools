@@ -899,7 +899,7 @@
                 },
                 {
                     "command": "kubernetes.gitlabExplorer.getContent",
-                    "when": "view == kubernetes.gitlabExplorer",
+                    "when": "view == kubernetes.gitlabExplorer && viewItem == gitlabfile",
                     "group": "0"
                 }
             ],
@@ -1552,8 +1552,20 @@
             },
             {
                 "command": "kubernetes.gitlabExplorer.getContent",
-                "title": "Get file content",
+                "title": "Get the file content",
                 "description": "Get file content bound to current object",
+                "category": "GitLab"
+            },
+            {
+                "command": "kubernetes.gitlabExplorer.addFile",
+                "title": "Create a file",
+                "description": "Create new file in here",
+                "category": "GitLab"
+            },
+            {
+                "command": "kubernetes.gitlabExplorer.addFolder",
+                "title": "Create a subfolder",
+                "description": "Create subfolder in here",
                 "category": "GitLab"
             },
             {

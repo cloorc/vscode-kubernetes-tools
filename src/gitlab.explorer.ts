@@ -1,10 +1,10 @@
 import * as vscode from "vscode";
 import { Host } from "./host";
-import { BaseResourceOptions, DefaultResourceOptions, RequesterType } from '@gitbeaker/requester-utils';
-import { Gitlab } from '@gitbeaker/core';
+import { BaseResourceOptions } from '@gitbeaker/requester-utils';
+import { Resources } from '@gitbeaker/core';
+import { Gitlab } from '@gitbeaker/node';
 import { kubernetes } from "./logger";
 import { AbstractCluster, AbstractClusterExplorer, AbstractObject } from "./abstractcluster";
-import got from 'got';
 
 export const GITLAB_STATE = "ms-kubernetes-tools.vscode-kubernetes-tools.gitlab-explorer";
 
@@ -17,12 +17,12 @@ export class GitLabObject implements AbstractObject<GitLabObject> {
     readonly name: string;
     readonly path: string;
     options: string | undefined;
-    gitlab: Gitlab | undefined;
+    gitlab: Resources.Gitlab | undefined;
     file: boolean = false;
     repo: string;
     readonly token: string | undefined;
     readonly project: number;
-    constructor(name: string, repo: string, path: string, file: boolean, token: string | undefined, options: string | undefined, gitlab: Gitlab | undefined) {
+    constructor(name: string, repo: string, path: string, file: boolean, token: string | undefined, options: string | undefined, gitlab: Resources.Gitlab | undefined) {
         if (!options && !gitlab) {
             throw new Error(`Options or gitlab should be provided at least one.`);
         }
@@ -42,17 +42,15 @@ export class GitLabObject implements AbstractObject<GitLabObject> {
             return [];
         }
         const files = await this.gitlab!.Repositories.tree(this.repo, { path: this.path, perPage: 1000 });
-        return files.map((file) => new GitLabObject(file.name, this.repo, file.path, false, this.token, this.options, this.gitlab));
+        return files.map((f) => new GitLabObject(f.name, this.repo, f.path, 'blob' === f.type, this.token, this.options, this.gitlab));
     }
     getTreeItem(): vscode.TreeItem {
         const item = this.file ? new vscode.TreeItem(this.name, vscode.TreeItemCollapsibleState.None) :
             new vscode.TreeItem(this.name, vscode.TreeItemCollapsibleState.Collapsed);
         if (this.file) {
-            item.command = {
-                command: "kubernetes.gitlabExplorer.getContent",
-                title: "Get file content",
-                arguments: [this]
-            };
+            item.contextValue = "gitlabfile";
+        } else {
+            item.contextValue = "gitlabfolder";
         }
         return item;
     }
@@ -77,16 +75,10 @@ export class GitLabExplorer extends AbstractClusterExplorer<GitLabObject> {
             const options = cluster || {};
             try {
                 const uri = vscode.Uri.parse(options.host);
-                const api = `${uri.scheme}://${uri.authority}/api/v4/`;
-                const requester: RequesterType = {
-                    get: (endpoint: string, options?: Record<string, unknown>) => got.get(api + endpoint, options),
-                    post: (endpoint: string, options?: Record<string, unknown>) => got.post(api + endpoint, options),
-                    put: (endpoint: string, options?: Record<string, unknown>) => got.put(api + endpoint, options),
-                    delete: (endpoint: string, options?: Record<string, unknown>) => got.delete(api + endpoint, options)
-                };
                 const client = new Gitlab({
                     ...options,
-                    requesterFn: (_resourceOptions: DefaultResourceOptions) => requester
+                    host: `${uri.scheme}://${uri.authority}`,
+                    version: 4
                 });
                 validClusters.push(new GitLabObject(cluster.host, uri.path.substring(1), "/", false, undefined, undefined, client));
             } catch (err) {
@@ -102,7 +94,10 @@ export class GitLabExplorer extends AbstractClusterExplorer<GitLabObject> {
 }
 
 export async function addExistingGitLabRepository(etcdExplorer: GitLabExplorer, context: vscode.ExtensionContext) {
-    const endpoint = await vscode.window.showInputBox({ prompt: `Please specify the URL of GitLab repository:`, placeHolder: `https://gitlab.com/group/repository` });
+    const endpoint = await vscode.window.showInputBox({
+        prompt: `Please specify the URL of GitLab repository:`,
+        placeHolder: `https://gitlab.com/group/repository`
+    });
     if (!endpoint) {
         vscode.window.showErrorMessage(`Repository URL is required.`);
         return;
