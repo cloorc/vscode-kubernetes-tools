@@ -689,22 +689,27 @@
                 },
                 {
                     "command": "extension.vsKubernetesEdit",
-                    "group": "2@1",
+                    "group": "2@2",
+                    "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource(?!\\.namespace).*/i"
+                },
+                {
+                    "command": "extension.vsKubernetesEditLegacy",
+                    "group": "2@3",
                     "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource(?!\\.namespace).*/i"
                 },
                 {
                     "command": "extension.vsKubernetesNodeShell",
-                    "group": "2@2",
+                    "group": "2@4",
                     "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource\\.node/i"
                 },
                 {
                     "command": "extension.vsKubernetesInstances",
-                    "group": "2@3",
+                    "group": "2@5",
                     "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource\\.(deployment|statefulset|daemonset)/i"
                 },
                 {
                     "command": "extension.vsKubernetesDelete",
-                    "group": "2@4",
+                    "group": "2@6",
                     "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource.*/i"
                 },
                 {
@@ -1056,6 +1061,11 @@
             {
                 "command": "extension.vsKubernetesEdit",
                 "title": "Edit",
+                "category": "Kubernetes"
+            },
+            {
+                "command": "extension.vsKubernetesEditLegacy",
+                "title": "Edit Legacy",
                 "category": "Kubernetes"
             },
             {

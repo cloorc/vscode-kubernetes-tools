@@ -192,6 +192,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<APIBro
         registerCommand('extension.vsKubernetesDeleteNow', (explorerNode: ClusterExplorerResourceNode) => { deleteKubernetes(KubernetesDeleteMode.Now, explorerNode); }),
         registerCommand('extension.vsKubernetesDescribe.Refresh', () => refreshDescribeKubernetes(resourceDocProvider)),
         registerCommand('extension.vsKubernetesEdit', (node: ClusterExplorerResourceNode) => editKubernetes(kubectl, node)),
+        registerCommand('extension.vsKubernetesEditLegacy', (node: ClusterExplorerResourceNode) => editKubernetesLegacy(kubectl, node)),
         registerCommand('extension.vsKubernetesApply', applyKubernetes),
         registerCommand('extension.vsKubernetesRestart', restartKubernetes),
         registerCommand('extension.vsKubernetesExplain', explainActiveWindow),
@@ -1725,6 +1726,12 @@ async function confirmOperation(prompt: (msg: string, options: vscode.MessageOpt
     if (result === confirmVerb) {
         operation();
     }
+}
+
+async function editKubernetesLegacy(kubectl: Kubectl, node: ClusterExplorerResourceNode) {
+  const ns = node.namespace ;
+  const kind = node.kindName;
+  await kubectl.legacySpawnAsChild(["edit", kind, "--namespace", ns], { title: `Kubectl: editing ${kind} ... ` });
 }
 
 async function editKubernetes(kubectl: Kubectl, node: ClusterExplorerResourceNode) {
