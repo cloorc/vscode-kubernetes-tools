@@ -93,6 +93,7 @@
         "onView:kubernetes.etcdExplorer",
         "onView:kubernetes.minioExplorer",
         "onView:kubernetes.gitlabExplorer",
+        "onView:kubernetes.homeExplorer",
         "onCommand:kubernetes.cloudExplorer.mergeIntoKubeconfig",
         "onCommand:kubernetes.cloudExplorer.saveKubeconfig",
         "onCommand:kubernetes.cloudExplorer.findProviders",
@@ -459,6 +460,10 @@
                 {
                     "id": "kubernetes.gitlabExplorer",
                     "name": "GitLab Files"
+                },
+                {
+                    "id": "kubernetes.homeExplorer",
+                    "name": "Home"
                 }
             ]
         },
@@ -589,6 +594,11 @@
                     "command": "kubernetes.gitlabExplorer.removeRepository",
                     "when": "view == kubernetes.gitlabExplorer",
                     "group": "0"
+                },
+                {
+                    "command": "kubernetes.homeExplorer.refresh",
+                    "when": "view == kubernetes.homeExplorer",
+                    "group": "navigation"
                 }
             ],
             "view/item/context": [
@@ -1004,6 +1014,10 @@
                 {
                     "command": "kubernetes.gitlabExplorer.refresh",
                     "when": "view === kubernetes.gitlabExplorer"
+                },
+                {
+                    "command": "kubernetes.homeExplorer.refresh",
+                    "when": "view === kubernetes.homeExplorer"
                 },
                 {
                     "command": "kubernetes.gitlabExplorer.addExistingRepository",
@@ -1544,6 +1558,16 @@
                 }
             },
             {
+                "command": "kubernetes.homeExplorer.refresh",
+                "title": "Refresh",
+                "description": "Refresh home items",
+                "category": "Kubernetes-Home",
+                "icon": {
+                    "dark": "images/dark/refresh.svg",
+                    "light": "images/light/refresh.svg"
+                }
+            },
+            {
                 "command": "kubernetes.gitlabExplorer.addExistingRepository",
                 "title": "Add repository",
                 "description": "Add an existing cluster",
@@ -1572,6 +1596,12 @@
                 "title": "Copy file path",
                 "description": "Copy the path of current object",
                 "category": "Kubernetes-GitLab"
+            },
+            {
+                "command": "kubernetes.homeExplorer.open",
+                "title": "Open file",
+                "description": "Open file in filesystem",
+                "category": "Kubernetes-FileSystem"
             },
             {
                 "command": "kubernetes.cloudExplorer.mergeIntoKubeconfig",

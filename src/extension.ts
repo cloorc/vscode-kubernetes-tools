@@ -93,6 +93,7 @@ import { ResourceNode } from './components/clusterexplorer/node.resource';
 import * as etcd from './etcdcluster';
 import * as minio from './miniocluster';
 import * as gitlab from './gitlab.explorer';
+import * as fe from './home.explorer';
 
 let explainActive = false;
 let swaggerSpecPromise: Promise<explainer.SwaggerModel | undefined> | null = null;
@@ -159,6 +160,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<APIBro
     const etcdExplorer = etcd.create(host, context);
     const minioExplorer = minio.create(host, context);
     const gitlabExplorer = gitlab.create(host, context);
+    const homeExplorer = fe.create(host, context);
 
     const completionFilter = [
         "helm",
@@ -297,6 +299,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<APIBro
         registerCommand('kubernetes.gitlabExplorer.submitContent', () => gitlabExplorer.submitContentToRepository()),
         registerCommand('kubernetes.gitlabExplorer.copyPath', (node: gitlab.GitLabObject) => node.copyPath()),
 
+        // Commands - Home
+        registerCommand('kubernetes.homeExplorer.refresh', (node: fe.FileObject) => homeExplorer.refresh(node)),
+
         // Commands - API
         registerCommand('kubernetes.cloudExplorer.mergeIntoKubeconfig', kubernetesMergeIntoKubeconfig),
         registerCommand('kubernetes.cloudExplorer.saveKubeconfig', kubernetesSaveKubeconfig),
@@ -339,6 +344,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<APIBro
         vscode.window.registerTreeDataProvider('kubernetes.etcdExplorer', etcdExplorer),
         vscode.window.registerTreeDataProvider('kubernetes.minioExplorer', minioExplorer),
         vscode.window.registerTreeDataProvider('kubernetes.gitlabExplorer', gitlabExplorer),
+        vscode.window.registerTreeDataProvider('kubernetes.homeExplorer', homeExplorer),
 
         // Temporarily loaded resource providers
         vscode.workspace.registerFileSystemProvider(K8S_RESOURCE_SCHEME, resourceDocProvider, { /* TODO: case sensitive? */ }),
