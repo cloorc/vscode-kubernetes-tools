@@ -106,6 +106,7 @@ const configMapProvider = new configmaps.ConfigMapTextProvider(kubectl);
 const git = new Git(shell);
 const activeContextTracker = activeContextTrackerCreate(kubectl);
 const onDidChangeKubeconfigEmitter = new vscode.EventEmitter<KubeconfigPath>();
+const originSelectorPrefix = "origin-selector.";
 
 export const overwriteMessageItems: vscode.MessageItem[] = [
     {
@@ -193,6 +194,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<APIBro
         registerCommand('extension.vsKubernetesDescribe.Refresh', () => refreshDescribeKubernetes(resourceDocProvider)),
         registerCommand('extension.vsKubernetesEdit', (node: ClusterExplorerResourceNode) => editKubernetes(kubectl, node)),
         registerCommand('extension.vsKubernetesEditLegacy', (node: ClusterExplorerResourceNode) => editKubernetesLegacy(kubectl, node)),
+        registerCommand('extension.vsKubernetesServiceBridge', (node: ClusterExplorerResourceNode) => bridgeKubernetesService(kubectl, node)),
+        registerCommand('extension.vsKubernetesServiceBridgeRecover', (node: ClusterExplorerResourceNode) => bridgeKubernetesServiceRecover(kubectl, node)),
         registerCommand('extension.vsKubernetesApply', applyKubernetes),
         registerCommand('extension.vsKubernetesRestart', restartKubernetes),
         registerCommand('extension.vsKubernetesExplain', explainActiveWindow),
@@ -1729,15 +1732,14 @@ async function confirmOperation(prompt: (msg: string, options: vscode.MessageOpt
 }
 
 async function editKubernetesLegacy(kubectl: Kubectl, node: ClusterExplorerResourceNode) {
-  const ns = node.namespace ;
-  const kind = node.kindName;
-  await kubectl.legacySpawnAsChild(["edit", kind, "--namespace", ns], { title: `Kubectl: editing ${kind} ... ` });
+    const ns = node.namespace;
+    const kind = node.kindName;
+    await kubectl.legacySpawnAsChild(["edit", kind, "--namespace", ns], { title: `Kubectl: editing ${kind} ... ` });
 }
 
 async function editKubernetes(kubectl: Kubectl, node: ClusterExplorerResourceNode) {
-    const ns = node.namespace ;
+    const ns = node.namespace;
     const kind = node.kindName;
-    // await kubectl.legacySpawnAsChild(["edit", kind, "--namespace", ns], { title: `Kubectl: editing ${kind} ... ` });
     kubectl.legacyInvokeAsync(`get ${kind} -n "${ns}" -o yaml`).then((sr) => {
         if (sr && sr.code === 0) {
             vscode.workspace.openTextDocument({ language: "yaml", content: sr.stdout }).then((doc) => {
@@ -1750,49 +1752,82 @@ async function editKubernetes(kubectl: Kubectl, node: ClusterExplorerResourceNod
     });
 }
 
-const applyKubernetes = () => {
-    diffKubernetesCore((r) => {
-        switch (r.result) {
-            case DiffResultKind.Succeeded:
-                confirmOperation(
-                    vscode.window.showInformationMessage as PromptFunction,
-                    'Do you wish to apply this change?',
-                    'Apply',
-                    () => maybeRunKubernetesCommandForActiveWindow('apply', "Kubernetes Applying...")
-                );
-                return;
-            case DiffResultKind.NoEditor:
-                vscode.window.showErrorMessage("No active editor - the Apply command requires an open document");
-                return;
-            case DiffResultKind.NoKindName:
-                confirmOperation(
-                    vscode.window.showWarningMessage as PromptFunction,
-                    `Can't show what changes will be applied (${r.reason}). Apply anyway?`,
-                    'Apply',
-                    () => maybeRunKubernetesCommandForActiveWindow('apply', "Kubernetes Applying...")
-                );
-                return;
-            case DiffResultKind.NoClusterResource:
-                confirmOperation(
-                    vscode.window.showWarningMessage as PromptFunction,
-                    `Resource ${r.resourceName} does not exist - this will create a new resource.`,
-                    'Create',
-                    () => maybeRunKubernetesCommandForActiveWindow('create', "Kubernetes Creating...")
-                );
-                return;
-            case DiffResultKind.GetFailed:
-                confirmOperation(
-                    vscode.window.showWarningMessage as PromptFunction,
-                    `Can't show what changes will be applied - error getting existing resource (${r.stderr}). Apply anyway?`,
-                    'Apply',
-                    () => maybeRunKubernetesCommandForActiveWindow('apply', "Kubernetes Applying...")
-                );
-                return;
-            case DiffResultKind.NothingToDiff:
-                vscode.window.showInformationMessage("Nothing to apply");
-                return;
+interface SimpleService {
+    metadata: {
+        name: string;
+        annotations: {
+            [key: string]: string;
+        };
+    };
+    spec: {
+        selector: {
+            [key: string]: string;
+        };
+    };
+}
+
+async function bridgeKubernetesService(kubectl: Kubectl, node: ClusterExplorerResourceNode) {
+    const ns = node.namespace;
+    const kind = node.kindName;
+    let er = await kubectl.invokeCommand(`-n ${ns} get ${kind} -o json`);
+    if (ExecResult.succeeded(er)) {
+        const source: SimpleService = JSON.parse(er.stdout);
+        er = await kubectl.invokeCommand(`get namespaces -o json`);
+        if (ExecResult.succeeded(er)) {
+            const namespaces: { items: { metadata: { name: string } }[] } = JSON.parse(er.stdout);
+            const namespace = await vscode.window.showQuickPick(namespaces.items.map(n => n.metadata.name), { canPickMany: false });
+            if (namespace) {
+                er = await kubectl.invokeCommand(`-n ${namespace} get services -o json`);
+                if (ExecResult.succeeded(er)) {
+                    const services: { items: SimpleService[] } = JSON.parse(er.stdout);
+                    const service = await vscode.window.showQuickPick(services.items.map((s) => s.metadata.name), { canPickMany: false });
+                    const target = services.items.filter((i) => i.metadata.name === service)[0];
+                    if (service && target) {
+                        for (const [k, v] of Object.entries(source.spec.selector)) {
+                            if (!source.metadata.annotations[`${originSelectorPrefix}${k}`]) {
+                                source.metadata.annotations[`${originSelectorPrefix}${k}`] = v;
+                            }
+                        }
+                        source.spec.selector = target.spec.selector;
+                        diff(JSON.stringify(source, null, "    "), null, differenceCallback);
+                    } else {
+                        vscode.window.showInformationMessage(`Kubectl: user not select target service, which is required..`);
+                    }
+                } else {
+                    vscode.window.showInformationMessage(`Kubectl: unable to list services in ${namespace}.`);
+                }
+            } else {
+                vscode.window.showInformationMessage(`Kubectl: user not select namespace, which is required.`);
+            }
+        } else {
+            vscode.window.showInformationMessage(`Kubectl: unable to list namespaces.`);
         }
-    });
+    } else {
+        vscode.window.showInformationMessage(`Kubectl: unable to get service definition of ${ns}/${kind}`);
+    }
+}
+
+async function bridgeKubernetesServiceRecover(kubectl: Kubectl, node: ClusterExplorerResourceNode) {
+    const ns = node.namespace;
+    const kind = node.kindName;
+    let er = await kubectl.invokeCommand(`-n ${ns} get ${kind} -o json`);
+    if (ExecResult.succeeded(er)) {
+        const source: SimpleService = JSON.parse(er.stdout);
+        er = await kubectl.invokeCommand(`get namespaces -o json`);
+        source.spec.selector = {};
+        for (const [k, v] of Object.entries(source.metadata.annotations)) {
+            if (k.startsWith(originSelectorPrefix)) {
+                source.spec.selector[k.substring(originSelectorPrefix.length)] = v;
+            }
+        }
+        diff(JSON.stringify(source, null, "    "), null, differenceCallback);
+    } else {
+        vscode.window.showInformationMessage(`Kubectl: unable to get service definition of ${ns}/${kind}`);
+    }
+}
+
+const applyKubernetes = () => {
+    diffKubernetesCore(differenceCallback);
 };
 
 const handleError = (err: NodeJS.ErrnoException) => {
@@ -1800,6 +1835,49 @@ const handleError = (err: NodeJS.ErrnoException) => {
         vscode.window.showErrorMessage(err.message);
     }
 };
+
+function differenceCallback(r: DiffResult) {
+    switch (r.result) {
+        case DiffResultKind.Succeeded:
+            confirmOperation(
+                vscode.window.showInformationMessage as PromptFunction,
+                'Do you wish to apply this change?',
+                'Apply',
+                () => maybeRunKubernetesCommandForActiveWindow('apply', "Kubernetes Applying...")
+            );
+            return;
+        case DiffResultKind.NoEditor:
+            vscode.window.showErrorMessage("No active editor - the Apply command requires an open document");
+            return;
+        case DiffResultKind.NoKindName:
+            confirmOperation(
+                vscode.window.showWarningMessage as PromptFunction,
+                `Can't show what changes will be applied (${r.reason}). Apply anyway?`,
+                'Apply',
+                () => maybeRunKubernetesCommandForActiveWindow('apply', "Kubernetes Applying...")
+            );
+            return;
+        case DiffResultKind.NoClusterResource:
+            confirmOperation(
+                vscode.window.showWarningMessage as PromptFunction,
+                `Resource ${r.resourceName} does not exist - this will create a new resource.`,
+                'Create',
+                () => maybeRunKubernetesCommandForActiveWindow('create', "Kubernetes Creating...")
+            );
+            return;
+        case DiffResultKind.GetFailed:
+            confirmOperation(
+                vscode.window.showWarningMessage as PromptFunction,
+                `Can't show what changes will be applied - error getting existing resource (${r.stderr}). Apply anyway?`,
+                'Apply',
+                () => maybeRunKubernetesCommandForActiveWindow('apply', "Kubernetes Applying...")
+            );
+            return;
+        case DiffResultKind.NothingToDiff:
+            vscode.window.showInformationMessage("Nothing to apply");
+            return;
+    }
+}
 
 function diffKubernetes(): void {
     diffKubernetesCore((r) => {
@@ -1822,80 +1900,82 @@ function diffKubernetes(): void {
                 vscode.window.showInformationMessage("Nothing to diff");
                 return;
         }
-
     });
 }
 
+function diff(data: string | null, file: vscode.Uri | null, callback: (r: DiffResult) => void) {
+    console.log(data, file);
+    let kindName: string | null = null;
+    let kindObject: Errorable<ResourceKindName> | undefined = undefined;
+    let fileUri: vscode.Uri | null = null;
+
+    let fileFormat = "json";
+
+    if (data) {
+        fileFormat = (data.trim().length > 0 && data.trim()[0] === '{') ? "json" : "yaml";
+        kindObject = findKindNameForText(data);
+        if (failed(kindObject)) {
+            callback({ result: DiffResultKind.NoKindName, reason: kindObject.error[0] });
+            return;
+        }
+        kindName = `${kindObject.result.kind}/${kindObject.result.resourceName}`;
+        const filePath = path.join(os.tmpdir(), `local.${fileFormat}`);
+        fs.writeFile(filePath, data, handleError);
+        fileUri = shell.fileUri(filePath);
+    } else if (file) {
+        if (!vscode.window.activeTextEditor) {
+            callback({ result: DiffResultKind.NoEditor });
+            return; // No open text editor
+        }
+        kindObject = tryFindKindNameFromEditor();
+        if (failed(kindObject)) {
+            callback({ result: DiffResultKind.NoKindName, reason: kindObject.error[0] });
+            return;
+        }
+        kindName = `${kindObject.result.kind}/${kindObject.result.resourceName}`;
+        fileUri = file;
+        if (vscode.window.activeTextEditor && vscode.window.activeTextEditor.document) {
+            const langId = vscode.window.activeTextEditor.document.languageId.toLowerCase();
+            if (langId === "yaml" || langId === "helm") {
+                fileFormat = "yaml";
+            }
+        }
+    } else {
+        callback({ result: DiffResultKind.NothingToDiff });
+        return;
+    }
+
+    if (!kindName) {
+        callback({ result: DiffResultKind.NoKindName, reason: 'Could not find a valid API object' });
+        return;
+    }
+
+    kubectl.invokeCommandThen(` get -o ${fileFormat} ${kindName}`, (er) => {
+        if (er.resultKind === 'exec-errored' && er.code === 1 && er.stderr.indexOf('NotFound') >= 0) {
+            callback({ result: DiffResultKind.NoClusterResource, resourceName: kindName || undefined });  // TODO: rationalise our nulls and undefineds
+            return;
+        }
+        else if (er.resultKind !== 'exec-succeeded') {
+            callback({ result: DiffResultKind.GetFailed, stderr: ExecResult.failureMessage(er, {}) });
+            return;
+        }
+
+        const serverFile = path.join(os.tmpdir(), `server.${fileFormat}`);
+        fs.writeFile(serverFile, er.stdout, handleError);
+
+        vscode.commands.executeCommand(
+            'vscode.diff',
+            shell.fileUri(serverFile),
+            fileUri).then((result) => {
+                console.log(result);
+                callback({ result: DiffResultKind.Succeeded });
+            },
+                (err) => vscode.window.showErrorMessage(`Error running command: ${err}`));
+    });
+}
 function diffKubernetesCore(callback: (r: DiffResult) => void): void {
     getTextForActiveWindow((data, file) => {
-        console.log(data, file);
-        let kindName: string | null = null;
-        let kindObject: Errorable<ResourceKindName> | undefined = undefined;
-        let fileUri: vscode.Uri | null = null;
-
-        let fileFormat = "json";
-
-        if (data) {
-            fileFormat = (data.trim().length > 0 && data.trim()[0] === '{') ? "json" : "yaml";
-            kindObject = findKindNameForText(data);
-            if (failed(kindObject)) {
-                callback({ result: DiffResultKind.NoKindName, reason: kindObject.error[0] });
-                return;
-            }
-            kindName = `${kindObject.result.kind}/${kindObject.result.resourceName}`;
-            const filePath = path.join(os.tmpdir(), `local.${fileFormat}`);
-            fs.writeFile(filePath, data, handleError);
-            fileUri = shell.fileUri(filePath);
-        } else if (file) {
-            if (!vscode.window.activeTextEditor) {
-                callback({ result: DiffResultKind.NoEditor });
-                return; // No open text editor
-            }
-            kindObject = tryFindKindNameFromEditor();
-            if (failed(kindObject)) {
-                callback({ result: DiffResultKind.NoKindName, reason: kindObject.error[0] });
-                return;
-            }
-            kindName = `${kindObject.result.kind}/${kindObject.result.resourceName}`;
-            fileUri = file;
-            if (vscode.window.activeTextEditor && vscode.window.activeTextEditor.document) {
-                const langId = vscode.window.activeTextEditor.document.languageId.toLowerCase();
-                if (langId === "yaml" || langId === "helm") {
-                    fileFormat = "yaml";
-                }
-            }
-        } else {
-            callback({ result: DiffResultKind.NothingToDiff });
-            return;
-        }
-
-        if (!kindName) {
-            callback({ result: DiffResultKind.NoKindName, reason: 'Could not find a valid API object' });
-            return;
-        }
-
-        kubectl.invokeCommandThen(` get -o ${fileFormat} ${kindName}`, (er) => {
-            if (er.resultKind === 'exec-errored' && er.code === 1 && er.stderr.indexOf('NotFound') >= 0) {
-                callback({ result: DiffResultKind.NoClusterResource, resourceName: kindName || undefined });  // TODO: rationalise our nulls and undefineds
-                return;
-            }
-            else if (er.resultKind !== 'exec-succeeded') {
-                callback({ result: DiffResultKind.GetFailed, stderr: ExecResult.failureMessage(er, {}) });
-                return;
-            }
-
-            const serverFile = path.join(os.tmpdir(), `server.${fileFormat}`);
-            fs.writeFile(serverFile, er.stdout, handleError);
-
-            vscode.commands.executeCommand(
-                'vscode.diff',
-                shell.fileUri(serverFile),
-                fileUri).then((result) => {
-                    console.log(result);
-                    callback({ result: DiffResultKind.Succeeded });
-                },
-                    (err) => vscode.window.showErrorMessage(`Error running command: ${err}`));
-        });
+        return diff(data, file, callback);
     });
 }
 

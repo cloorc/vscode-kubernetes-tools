@@ -713,6 +713,16 @@
                     "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource.*/i"
                 },
                 {
+                    "command": "extension.vsKubernetesServiceBridge",
+                    "group": "2@7",
+                    "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource\\.service.*/i"
+                },
+                {
+                    "command": "extension.vsKubernetesServiceBridgeRecover",
+                    "group": "2@7",
+                    "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource\\.service.*/i"
+                },
+                {
                     "command": "extension.vsKubernetesDescribe",
                     "group": "3",
                     "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource(?!\\.namespace).*/i"
@@ -1066,6 +1076,16 @@
             {
                 "command": "extension.vsKubernetesEditLegacy",
                 "title": "Edit Legacy",
+                "category": "Kubernetes"
+            },
+            {
+                "command": "extension.vsKubernetesServiceBridge",
+                "title": "Bridge to ...",
+                "category": "Kubernetes"
+            },
+            {
+                "command": "extension.vsKubernetesServiceBridgeRecover",
+                "title": "Recover from Bridge",
                 "category": "Kubernetes"
             },
             {
