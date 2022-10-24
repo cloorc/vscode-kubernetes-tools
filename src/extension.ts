@@ -294,10 +294,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<APIBro
         // Commands - Minio
         registerCommand('kubernetes.gitlabExplorer.refresh', (node: gitlab.GitLabObject) => gitlabExplorer.refresh(node)),
         registerCommand('kubernetes.gitlabExplorer.addExistingRepository', () => gitlab.addExistingGitLabRepository(gitlabExplorer, context)),
+        registerCommand('kubernetes.gitlabExplorer.createMergeRequest', (node: gitlab.GitLabObject) => node.createMergeRequest()),
         registerCommand('kubernetes.gitlabExplorer.removeRepository', () => gitlabExplorer.removeClusters()),
         registerCommand('kubernetes.gitlabExplorer.getContent', (node: gitlab.GitLabObject) => gitlab.getContent(node)),
         registerCommand('kubernetes.gitlabExplorer.submitContent', () => gitlabExplorer.submitContentToRepository()),
         registerCommand('kubernetes.gitlabExplorer.copyPath', (node: gitlab.GitLabObject) => node.copyPath()),
+        registerCommand('kubernetes.gitlabExplorer.copyName', (node: gitlab.GitLabObject) => node.copyName()),
 
         // Commands - Home
         registerCommand('kubernetes.homeExplorer.refresh', (node: fe.FileObject) => homeExplorer.refresh(node)),

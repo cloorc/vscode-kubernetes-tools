@@ -59,9 +59,11 @@ export class GitLabObject implements AbstractObject<GitLabObject> {
                 title: "Get the file content",
                 arguments: [this]
             };
-            item.contextValue = "gitlabfile";
+            item.contextValue = "vskubernetes/gitlab/file";
+        } else if (this.name.toLowerCase().match(/^https?:\/\/.*/)) {
+            item.contextValue = "vskubernetes/gitlab/repo";
         } else {
-            item.contextValue = "gitlabfolder";
+            item.contextValue = "vskubernetes/gitlab/folder";
         }
         return item;
     }
@@ -70,6 +72,34 @@ export class GitLabObject implements AbstractObject<GitLabObject> {
         clipboard.write(this.path).then(() => {
             vscode.window.showInformationMessage(`Kubernetes: copied gitlab object path ${this.path}`);
         });
+    }
+
+    copyName() {
+        clipboard.write(this.name).then(() => {
+            vscode.window.showInformationMessage(`Kubernetes: copied gitlab object name ${this.name}`);
+        });
+    }
+
+    async createMergeRequest(): Promise<void> {
+        const branches = await this.gitlab!.Branches.all(this.repo, { perPage: 255 });
+        const targetBranch = await vscode.window.showQuickPick(branches.map((b) => b.name), { title: `Please specify the target branch:`, canPickMany: false });
+        if (targetBranch) {
+            const assignees = await this.gitlab!.ProjectMembers.all(this.repo, { perPage: 255, includeInherited: true });
+            const username = await vscode.window.showQuickPick(assignees.map((a) => a.username), { title: `Please specify the assignee:` });
+            const assignee = assignees.filter((a) => a.username === username)[0];
+            if (assignee) {
+                this.gitlab!.MergeRequests.create(this.repo, this.branch, targetBranch,
+                    `New merge request from Visual Studio Code - Kubernetes`, { assigneeId: assignee.id }).then((res) => {
+                        vscode.window.showInformationMessage(`Merge request created successfully: ${res.id}`);
+                    }).catch((err) => {
+                        vscode.window.showWarningMessage(`Unable to create merge request: ${err}`);
+                    });
+            } else {
+                vscode.window.showWarningMessage(`Missing assignee, which is requred.`);
+            }
+        } else {
+            vscode.window.showWarningMessage(`Missing target branch, which is requred.`);
+        }
     }
 }
 
@@ -132,10 +162,18 @@ export class GitLabExplorer extends AbstractClusterExplorer<GitLabObject> {
                 const branch = project.default_branch || "master";
                 client.RepositoryFiles.show(repo, path, branch, undefined).then((_) => {
                     client.RepositoryFiles.edit(repo, path, branch, content, "Submit from kubernetes gitlab explorer",
-                        { encoding: "base64" });
+                        { encoding: "base64" }).then(() => {
+                            vscode.window.showInformationMessage(`Kubectl GitLab: content has been committed successfully.`);
+                        }).catch((err) => {
+                            vscode.window.showInformationMessage(`Kubectl GitLab: content hasn't been committed ${err}`);
+                        });
                 }).catch((_) => {
                     client.RepositoryFiles.create(repo, path, branch, content, "Submit from kubernetes gitlab explorer",
-                        { encoding: "base64" });
+                        { encoding: "base64" }).then(() => {
+                            vscode.window.showInformationMessage(`Kubectl GitLab: content has been committed successfully.`);
+                        }).catch((err) => {
+                            vscode.window.showInformationMessage(`Kubectl GitLab: content hasn't been committed ${err}`);
+                        });
                 });
             }
         } else {

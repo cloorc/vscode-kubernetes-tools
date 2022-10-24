@@ -909,11 +909,21 @@
                 },
                 {
                     "command": "kubernetes.gitlabExplorer.getContent",
-                    "when": "view == kubernetes.gitlabExplorer && viewItem == gitlabfile",
+                    "when": "view == kubernetes.gitlabExplorer && viewItem == vskubernetes/gitlab/file",
+                    "group": "0"
+                },
+                {
+                    "command": "kubernetes.gitlabExplorer.createMergeRequest",
+                    "when": "view == kubernetes.gitlabExplorer && viewItem == vskubernetes/gitlab/repo",
                     "group": "0"
                 },
                 {
                     "command": "kubernetes.gitlabExplorer.copyPath",
+                    "when": "view == kubernetes.gitlabExplorer",
+                    "group": "0"
+                },
+                {
+                    "command": "kubernetes.gitlabExplorer.copyName",
                     "when": "view == kubernetes.gitlabExplorer",
                     "group": "0"
                 }
@@ -1022,6 +1032,10 @@
                 {
                     "command": "kubernetes.gitlabExplorer.addExistingRepository",
                     "when": "view === kubernetes.gitlabExplorer"
+                },
+                {
+                    "command": "kubernetes.gitlabExplorer.createMergeRequest",
+                    "when": "view === kubernetes.gitlabExplorer && viewItem == gitlabrepo"
                 },
                 {
                     "command": "kubernetes.gitlabExplorer.removeRepository",
@@ -1574,6 +1588,12 @@
                 "category": "Kubernetes-GitLab"
             },
             {
+                "command": "kubernetes.gitlabExplorer.createMergeRequest",
+                "title": "Create merge request",
+                "description": "Create a new merge request",
+                "category": "Kubernetes-GitLab"
+            },
+            {
                 "command": "kubernetes.gitlabExplorer.removeRepository",
                 "title": "Remove repository",
                 "description": "Remove an existing cluster",
@@ -1595,6 +1615,12 @@
                 "command": "kubernetes.gitlabExplorer.copyPath",
                 "title": "Copy file path",
                 "description": "Copy the path of current object",
+                "category": "Kubernetes-GitLab"
+            },
+            {
+                "command": "kubernetes.gitlabExplorer.copyName",
+                "title": "Copy name",
+                "description": "Copy the name of current object",
                 "category": "Kubernetes-GitLab"
             },
             {
