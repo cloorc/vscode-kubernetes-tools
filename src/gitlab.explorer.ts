@@ -60,7 +60,7 @@ export class GitLabObject implements AbstractObject<GitLabObject> {
                 arguments: [this]
             };
             item.contextValue = "vskubernetes/gitlab/file";
-        } else if (this.name.toLowerCase().match(/^https?:\/\/.*/)) {
+        } else if (this.path === "/") {
             item.contextValue = "vskubernetes/gitlab/repo";
         } else {
             item.contextValue = "vskubernetes/gitlab/folder";
