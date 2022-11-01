@@ -105,7 +105,7 @@ export class GitLabObject implements AbstractObject<GitLabObject> {
 
 export class GitLabExplorer extends AbstractClusterExplorer<GitLabObject> {
     protected name(cluster: AbstractCluster): string {
-        return (cluster as Repository).host;
+        return (cluster as Repository).host.match(/https?:\/\/[^\/]+\/(.*)/)![1];
     }
     readonly context: vscode.ExtensionContext;
 
@@ -123,13 +123,14 @@ export class GitLabExplorer extends AbstractClusterExplorer<GitLabObject> {
             try {
                 const uri = vscode.Uri.parse(options.host);
                 const repo = uri.path.substring(1);
+                const host = `${uri.scheme}://${uri.authority}`;
                 const client = new Gitlab({
                     ...options,
-                    host: `${uri.scheme}://${uri.authority}`,
+                    host,
                     version: 4
                 });
                 const project = await client.Projects.show(repo);
-                validClusters.push(new GitLabObject(cluster.host, repo, "/",
+                validClusters.push(new GitLabObject(cluster.host.substring(host.length + 1), repo, "/",
                     false, project.default_branch || "master", undefined, undefined, client));
             } catch (err) {
                 kubernetes.log(`Skip invalid cluster: ${JSON.stringify(cluster)}(${JSON.stringify(err)})`);
