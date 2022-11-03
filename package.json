@@ -294,6 +294,11 @@
                                 "disabled"
                             ],
                             "description": "Set the smart code completion for CRDs. This would always prevent/allow the plugin to fetch all custom schemas from all CRDs on cluster, despite of their number."
+                        },
+                        "vs-kubernetes.node-shell-image": {
+                            "type": "string",
+                            "default": "alexeiled/nsenter:2.38",
+                            "description": "Set the node shell image."
                         }
                     },
                     "default": {
@@ -312,7 +317,8 @@
                         "vs-kubernetes.dotnet-vsdbg-path": "~/vsdbg/vsdbg",
                         "vs-kubernetes.local-tunnel-debug-provider": "",
                         "checkForMinikubeUpgrade": true,
-                        "imageBuildTool": "Docker"
+                        "imageBuildTool": "Docker",
+                        "vs-kubernetes.node-shell-image": "alexeiled/nsenter:2.38"
                     }
                 },
                 "vsdocker.imageUser": {
@@ -432,6 +438,12 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Set to true to automatically begin fetching logs once the log viewer is opened using the default settings."
+                },
+                "vs-kubernetes.node-shell-image": {
+                    "type": "string",
+                    "scope": "machine",
+                    "default": "alexeiled/nsenter:2.38",
+                    "description": "Use specific image instead of default on node shell."
                 }
             }
         },

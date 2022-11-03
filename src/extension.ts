@@ -862,7 +862,7 @@ async function execInNodeShell(kubectl: Kubectl, node: ResourceNode) {
                 containers: [
                     {
                         name: "nsenter",
-                        image: "alexeiled/nsenter:2.38",
+                        image: vscode.workspace.getConfiguration().get("vs-kubernetes.node-shell-image", "alexeiled/nsenter:2.38"),
                         command: [
                             "/nsenter", "--all", "--target=1", "--", "su", "-"
                         ],
