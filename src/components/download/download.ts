@@ -8,7 +8,7 @@ import { sleep } from '../../sleep';
 
 type DownloadFunc =
     (url: string, destination?: string, options?: any)
-         => Promise<Buffer> & stream.Duplex; // Stream has additional events - see https://www.npmjs.com/package/download
+        => Promise<Buffer> & stream.Duplex; // Stream has additional events - see https://www.npmjs.com/package/download
 
 let download: DownloadFunc | undefined;
 
@@ -48,7 +48,7 @@ export async function to(sourceUrl: string, destinationFile: string): Promise<Er
         await download!(sourceUrl, path.dirname(destinationFile), { filename: path.basename(destinationFile) });  // safe because we ensured it
         return { succeeded: true, result: null };
     } catch (e) {
-        return { succeeded: false, error: [e.message] };
+        return { succeeded: false, error: [(e as { message: string }).message] };
     }
 }
 

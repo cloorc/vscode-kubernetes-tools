@@ -87,7 +87,7 @@ export class KubernetesExplorer implements vscode.TreeDataProvider<ClusterExplor
 
     private readonly extenders = Array.of<ExplorerExtender<ClusterExplorerNode>>();
     private readonly customisers = Array.of<ExplorerUICustomizer<ClusterExplorerNode>>();
-    private refreshTimer: NodeJS.Timer;
+    private refreshTimer: NodeJS.Timer | undefined;
     private readonly refreshQueue = Array<ClusterExplorerNode>();
 
     constructor(private readonly kubectl: Kubectl, private readonly host: Host) {
@@ -104,7 +104,7 @@ export class KubernetesExplorer implements vscode.TreeDataProvider<ClusterExplor
             showCollapseAll: true
         });
         return vscode.Disposable.from(
-			viewer,
+            viewer,
             viewer.onDidCollapseElement(this.onElementCollapsed, this),
             viewer.onDidExpandElement(this.onElementExpanded, this)
         );
@@ -132,8 +132,8 @@ export class KubernetesExplorer implements vscode.TreeDataProvider<ClusterExplor
     getChildren(parent?: ClusterExplorerNode): vscode.ProviderResult<ClusterExplorerNode[]> {
         const baseChildren = this.getChildrenBase(parent);
         const contributedChildren = this.extenders
-                                        .filter((e) => e.contributesChildren(parent))
-                                        .map((e) => e.getChildren(parent));
+            .filter((e) => e.contributesChildren(parent))
+            .map((e) => e.getChildren(parent));
         return providerResult.append(baseChildren, ...contributedChildren);
     }
 
@@ -158,8 +158,7 @@ export class KubernetesExplorer implements vscode.TreeDataProvider<ClusterExplor
         WatchManager.instance().addWatch(id, apiUri, undefined, onWatchNotification);
     }
 
-    stopWatching(node: ClusterExplorerNode): void
-    {
+    stopWatching(node: ClusterExplorerNode): void {
         const id = this.getIdForWatch(node);
         if (id) {
             WatchManager.instance().removeWatch(id);
@@ -216,7 +215,7 @@ export class KubernetesExplorer implements vscode.TreeDataProvider<ClusterExplor
             // In the case where many requests of updating are received in a short amount of time
             // the tree is not refreshed for every change but once after a while.
             // Every call resets a timer which trigger the tree refresh
-            clearTimeout(this.refreshTimer);
+            clearTimeout(this.refreshTimer!);
             // check if element already is in refreshqueue before pushing it
             const alreadyInQueue = this.refreshQueue.some((queueEntry) => currentNodeId === this.getIdForWatch(queueEntry));
             if (!alreadyInQueue) {
@@ -230,9 +229,9 @@ export class KubernetesExplorer implements vscode.TreeDataProvider<ClusterExplor
 
     private onElementCollapsed(e: vscode.TreeViewExpansionEvent<ClusterExplorerNode>) {
         this.collapse(e.element);
-	}
+    }
 
-	private onElementExpanded(e: vscode.TreeViewExpansionEvent<ClusterExplorerNode>) {
+    private onElementExpanded(e: vscode.TreeViewExpansionEvent<ClusterExplorerNode>) {
         this.expand(e.element);
     }
 

@@ -9,8 +9,6 @@ export class FileObject implements AbstractObject<FileObject> {
     readonly path: vscode.Uri;
     options: string | undefined;
     file: boolean = false;
-    repo: string;
-    branch: string;
     constructor(name: string, path: vscode.Uri, file: boolean, options: string | undefined) {
         this.name = name;
         this.path = path;

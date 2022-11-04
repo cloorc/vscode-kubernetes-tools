@@ -22,8 +22,8 @@ interface KubernetesSchema {
 
 export class KubernetesClusterSchemaHolder {
     private definitions: { [key: string]: KubernetesSchema } = {};
-    private schemaEnums: { [key: string]: { [key: string]: [string[]] } };
-    private crdSchemas: { [key: string]: object | undefined };
+    private schemaEnums: { [key: string]: { [key: string]: [string[]] } } | undefined;
+    private crdSchemas: { [key: string]: object | undefined } | undefined;
 
     public static async fromActiveCluster(kubectl: Kubectl): Promise<KubernetesClusterSchemaHolder> {
         const holder = new KubernetesClusterSchemaHolder();
@@ -201,13 +201,13 @@ export class KubernetesClusterSchemaHolder {
 
     // add enum field for pre-defined enums in schema-enums json file
     private loadEnumsForKubernetesSchema(node: KubernetesSchema) {
-        if (node.properties && this.schemaEnums[node.name]) {
+        if (node.properties && this.schemaEnums![node.name]) {
             _.each(node.properties, (propSchema, propKey) => {
-                if (this.schemaEnums[node.name][propKey]) {
+                if (this.schemaEnums![node.name][propKey]) {
                     if (propSchema.type === "array" && propSchema.items) {
-                        propSchema.items.enum = this.schemaEnums[node.name][propKey];
+                        propSchema.items.enum = this.schemaEnums![node.name][propKey];
                     } else {
-                        propSchema.enum = this.schemaEnums[node.name][propKey];
+                        propSchema.enum = this.schemaEnums![node.name][propKey];
                     }
                 }
             });

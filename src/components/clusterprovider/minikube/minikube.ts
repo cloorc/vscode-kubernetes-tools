@@ -10,17 +10,17 @@ import { fromShellExitCodeOnly, Diagnostic } from '../../../wizard';
 import { getToolPath, getCheckForMinikubeUpgrade } from '../../config/config';
 import { installMinikube } from '../../installer/installer';
 
-export class MinikubeInfo {
+export interface MinikubeInfo {
     readonly running: boolean;
     readonly message: string;
 }
 
-export class MinikubeVersionInfo {
+export interface MinikubeVersionInfo {
     readonly currentVersion: string;
     readonly availableVersion: string;
 }
 
-export class MinikubeOptions {
+export interface MinikubeOptions {
     readonly vmDriver: string;
     readonly additionalFlags: string;
 }

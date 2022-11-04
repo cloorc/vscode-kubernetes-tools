@@ -741,10 +741,10 @@ function quickPickForChart(chartUri: vscode.Uri): vscode.QuickPickItem & { reado
     };
 }
 
-class Chart {
-    public name: string;
-    public version: string;
-    public appVersion: string;
+interface Chart {
+    name: string;
+    version: string;
+    appVersion: string;
 }
 
 // Load a chart object
@@ -940,9 +940,8 @@ export function ensureHelm(mode: EnsureMode) {
 }
 
 export class Requirement {
-    public repository: string;
-    public name: string;
-    public version: string;
+    constructor(public repository: string, public name: string, public version: string) {
+    }
     toString(): string {
         return `- name: ${this.name}
   version: ${this.version}
@@ -993,10 +992,7 @@ export function searchForChart(name: string): Requirement | undefined {
             const cache = YAML.load(repo.cache);
             _.each(cache.entries, (releases, name) => {
                 if (name === parts[1]) {
-                    req = new Requirement();
-                    req.repository = repo.url;
-                    req.name = name;
-                    req.version = releases[0].version;
+                    req = new Requirement(repo.url, name, releases[0].version);
                     return;
                 }
             });
