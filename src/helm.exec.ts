@@ -553,7 +553,7 @@ export async function helmUpgradeWithValues(): Promise<void> {
         return;
     }
 
-    const chart = metadata.chart.match(/^([^-]+)-([0-9\.]+)/)!.slice(1);
+    const chart = metadata.chart.match(/^(.*)-([0-9\.]+)/)!.slice(1);
 
     const repos: helmrepoexplorer.HelmRepo[] = (await helmRepoExplorer.getChildren()) as helmrepoexplorer.HelmRepo[] || [];
     const repoDictionary: Map<string, helmrepoexplorer.HelmRepo> = new Map();
