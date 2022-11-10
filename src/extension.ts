@@ -848,7 +848,7 @@ function kubectlId(explorerNode: ClusterExplorerResourceNode | ClusterExplorerRe
 
 async function execInNodeShell(kubectl: Kubectl, node: ResourceNode) {
     if (node) {
-        const pod = `terminal-${node.name}-${Date.now()}.${Math.floor(Math.random() * 1000000)}`;
+        const pod = `terminal-${node.name}`;
         const spec = {
             spec: {
                 hostPID: true,
@@ -876,8 +876,14 @@ async function execInNodeShell(kubectl: Kubectl, node: ResourceNode) {
             }
         };
         // kubectl run ${podName:?} --restart=Never -it --rm --image overriden --overrides '
-        const options = `--restart=Never -it --rm --image overriden --overrides '${JSON.stringify(spec)}'`;
-        const command = `run ${pod} ${options}`;
+        const create = `-n default --restart=Never -it --rm --image overriden --overrides '${JSON.stringify(spec)}'`;
+        const reuse = `-n default -it -- bash`;
+
+        const exists = await findPodByName(pod);
+        let command = `run ${pod} ${create}`;
+        if (exists && exists.data && exists.data.status.containerStatuses[0].state.running) {
+            command = `exec ${pod} ${reuse}`;
+        }
         kubectl.invokeInNewTerminal(command, pod).then(() => {
             vscode.window.showInformationMessage(`Kubectl: ${pod} is starting, please wait ... `);
         });
@@ -969,6 +975,23 @@ async function findPodsByLabel(labelQuery: string): Promise<FindPodsResult> {
     return await findPodsCore(`-l ${labelQuery}`);
 }
 
+async function findPodByName(name: string): Promise<OperationResult<Pod>> {
+    const podList = await kubectl.asJson<Pod>(` get pods -o json ${name}`);
+
+    if (failed(podList)) {
+        vscode.window.showErrorMessage('Kubectl command failed: ' + podList.error[0]);
+        return { succeeded: false, data: undefined };
+    }
+
+    try {
+        return { succeeded: true, data: podList.result };
+    } catch (ex) {
+        console.log(ex);
+        vscode.window.showErrorMessage('unexpected error: ' + ex);
+        return { succeeded: false, data: undefined };
+    }
+}
+
 async function findPodsCore(findPodCmdOptions: string): Promise<FindPodsResult> {
     const podList = await kubectl.asJson<KubernetesCollection<Pod>>(` get pods -o json ${findPodCmdOptions}`);
 
@@ -1000,6 +1023,11 @@ async function findDebugPodsForApp(): Promise<FindPodsResult> {
     }
     const appName = path.basename(vscode.workspace.rootPath);
     return await findPodsByLabel(`run=${appName}-debug`);
+}
+
+export interface OperationResult<T> {
+    readonly succeeded: boolean;
+    readonly data: T | undefined;
 }
 
 export interface FindPodsResult {

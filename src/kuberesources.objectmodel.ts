@@ -61,6 +61,11 @@ export interface PodStatus {
 
 export interface ContainerStatus {
     readonly ready: boolean;
+    readonly state: {
+        readonly running: undefined | {
+            readonly startedAt: string;
+        };
+    };
 }
 
 function isObjectMeta(obj: any): obj is ObjectMeta {
