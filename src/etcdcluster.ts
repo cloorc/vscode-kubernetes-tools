@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { Host } from "./host";
 import { Etcd3 } from 'etcd3';
 import { AbstractCluster, AbstractClusterExplorer, AbstractObject } from "./abstractcluster";
+import * as clipboard from './components/platform/clipboard';
 
 export const STATE = "ms-kubernetes-tools.vscode-kubernetes-tools.etcd-explorer";
 
@@ -33,6 +34,11 @@ export class EtcdObject implements AbstractObject<EtcdObject> {
     setCluster(isCluster: boolean): EtcdObject {
         this.cluster = isCluster;
         return this;
+    }
+    copyName() {
+        clipboard.write(this.name).then(() => {
+            vscode.window.showInformationMessage(`Kubernetes: copied etcd key ${this.name}`);
+        });
     }
     async getChildren(): Promise<EtcdObject[]> {
         if (this.leaf) {

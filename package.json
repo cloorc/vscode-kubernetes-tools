@@ -925,6 +925,11 @@
                     "group": "0"
                 },
                 {
+                    "command": "kubernetes.etcdExplorer.copyName",
+                    "when": "view == kubernetes.etcdExplorer",
+                    "group": "0"
+                },
+                {
                     "command": "kubernetes.minioExplorer.getContent",
                     "when": "view == kubernetes.minioExplorer",
                     "group": "0"
@@ -1559,6 +1564,12 @@
                 "command": "kubernetes.etcdExplorer.putKeyValue",
                 "title": "Put",
                 "description": "Put new key and value pair to cluster",
+                "category": "Kubernetes-ETCD"
+            },
+            {
+                "command": "kubernetes.etcdExplorer.copyName",
+                "title": "Copy Name",
+                "description": "Cope object's name",
                 "category": "Kubernetes-ETCD"
             },
             {

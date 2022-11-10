@@ -285,6 +285,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<APIBro
         registerCommand('kubernetes.etcdExplorer.getKeyValue', (node: etcd.EtcdObject) => etcd.getKeyValue(node)),
         registerCommand('kubernetes.etcdExplorer.delete', (node: etcd.EtcdObject) => etcd.delKeyFromEtcdCluster(node)),
         registerCommand('kubernetes.etcdExplorer.putKeyValue', (node: etcd.EtcdObject) => etcd.putKvToEtcdCluster(node)),
+        registerCommand('kubernetes.etcdExplorer.copyName', (node: etcd.EtcdObject) => node.copyName()),
 
         // Commands - Minio
         registerCommand('kubernetes.minioExplorer.refresh', (node: minio.MinioObject) => minioExplorer.refresh(node)),
@@ -292,7 +293,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<APIBro
         registerCommand('kubernetes.minioExplorer.removeClusters', () => minioExplorer.removeClusters()),
         registerCommand('kubernetes.minioExplorer.getContent', (node: minio.MinioObject) => minio.getContent(node)),
 
-        // Commands - Minio
+        // Commands - GitLab
         registerCommand('kubernetes.gitlabExplorer.refresh', (node: gitlab.GitLabObject) => gitlabExplorer.refresh(node)),
         registerCommand('kubernetes.gitlabExplorer.addExistingRepository', () => gitlab.addExistingGitLabRepository(gitlabExplorer, context)),
         registerCommand('kubernetes.gitlabExplorer.createMergeRequest', (node: gitlab.GitLabObject) => node.createMergeRequest()),
