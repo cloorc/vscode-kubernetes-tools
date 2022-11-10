@@ -16,6 +16,7 @@ export class EtcdObject implements AbstractObject<EtcdObject> {
     key: string | undefined;
     etcd3: Etcd3 | undefined;
     leaf: boolean = false;
+    cluster: boolean = false;
     constructor(name: string, leaf: boolean, options: string | undefined, key: string | undefined, etcd3: Etcd3 | undefined) {
         if (!options && (!key && !etcd3)) {
             throw new Error(`Options or ETCD3 should be provided at least one.`);
@@ -28,6 +29,10 @@ export class EtcdObject implements AbstractObject<EtcdObject> {
         if (this.options && !this.etcd3) {
             this.etcd3 = new Etcd3(JSON.parse(this.options));
         }
+    }
+    setCluster(isCluster: boolean): EtcdObject {
+        this.cluster = isCluster;
+        return this;
     }
     async getChildren(): Promise<EtcdObject[]> {
         if (this.leaf) {
@@ -49,6 +54,9 @@ export class EtcdObject implements AbstractObject<EtcdObject> {
             title: "Get value",
             arguments: [this]
         };
+        if (this.cluster) {
+            item.contextValue = "vskubernetes/etcd/cluster";
+        }
         return item;
     }
 }
@@ -69,12 +77,26 @@ export class EtcdExplorer extends AbstractClusterExplorer<EtcdObject> {
         return Promise.resolve(clusters.map((cluster) => {
             const options = cluster.options || {};
             const etcd = new Etcd3(options);
-            return new EtcdObject(cluster.name, false, undefined, "/", etcd);
+            return new EtcdObject(cluster.name, false, undefined, "/", etcd).setCluster(true);
         }));
     }
 
     public async removeClusters() {
         super.removeClusters(STATE);
+    }
+}
+
+export async function putKvToEtcdCluster(node: EtcdObject) {
+    const key = await vscode.window.showInputBox({ title: `Please enter the key: ` });
+    const value = await vscode.window.showInputBox({ title: `Please enter the value: ` });
+    if (key && value) {
+        node.etcd3?.put(key).value(value).exec().then(() => {
+            vscode.window.showInformationMessage(`Successfully put key ${key} to ${node.name}.`);
+        }, (err) => {
+            vscode.window.showInformationMessage(`Unable to put key ${key} to ${node.name} : ${err}`);
+        });
+    } else {
+        vscode.window.showInformationMessage(`Both key and value are required.`);
     }
 }
 

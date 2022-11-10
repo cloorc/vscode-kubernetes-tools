@@ -920,6 +920,11 @@
                     "group": "0"
                 },
                 {
+                    "command": "kubernetes.etcdExplorer.putKeyValue",
+                    "when": "view == kubernetes.etcdExplorer && viewItem == vskubernetes/etcd/cluster",
+                    "group": "0"
+                },
+                {
                     "command": "kubernetes.minioExplorer.getContent",
                     "when": "view == kubernetes.minioExplorer",
                     "group": "0"
@@ -1548,6 +1553,12 @@
                 "command": "kubernetes.etcdExplorer.delete",
                 "title": "Delete",
                 "description": "Delete current key from cluster",
+                "category": "Kubernetes-ETCD"
+            },
+            {
+                "command": "kubernetes.etcdExplorer.putKeyValue",
+                "title": "Put",
+                "description": "Put new key and value pair to cluster",
                 "category": "Kubernetes-ETCD"
             },
             {
