@@ -336,6 +336,11 @@ export async function getContent(node: GitLabObject): Promise<void> {
                         case "vue-html":
                             language = "vue-html";
                             break;
+                        case "yml":
+                        case "YAML":
+                        case "YML":
+                            language = "yaml";
+                            break;
                         default:
                             language = extension.toLowerCase();
                             break;
