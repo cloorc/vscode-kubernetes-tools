@@ -1160,7 +1160,7 @@
             },
             {
                 "command": "extension.vsKubernetesTransferServiceOwnership",
-                "title": "Resource policy: keep",
+                "title": "Transfer to & keep resource",
                 "category": "Kubernetes"
             },
             {
