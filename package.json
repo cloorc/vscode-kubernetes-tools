@@ -741,12 +741,22 @@
                 },
                 {
                     "command": "extension.vsKubernetesServiceBridge",
-                    "group": "2@7",
+                    "group": "4@1",
                     "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource\\.service.*/i"
                 },
                 {
                     "command": "extension.vsKubernetesServiceBridgeRecover",
-                    "group": "2@7",
+                    "group": "4@2",
+                    "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource\\.service.*/i"
+                },
+                {
+                    "command": "extension.vsKubernetesTransferServiceOwnership",
+                    "group": "4@3",
+                    "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource\\.service.*/i"
+                },
+                {
+                    "command": "extension.vsKubernetesRemoveServiceKeepAnnotation",
+                    "group": "4@4",
                     "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource\\.service.*/i"
                 },
                 {
@@ -1145,7 +1155,17 @@
             },
             {
                 "command": "extension.vsKubernetesServiceBridgeRecover",
-                "title": "Recover from Bridge",
+                "title": "Bridge rollback",
+                "category": "Kubernetes"
+            },
+            {
+                "command": "extension.vsKubernetesTransferServiceOwnership",
+                "title": "Resource policy: keep",
+                "category": "Kubernetes"
+            },
+            {
+                "command": "extension.vsKubernetesRemoveServiceKeepAnnotation",
+                "title": "Resource policy: clear",
                 "category": "Kubernetes"
             },
             {

@@ -197,6 +197,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<APIBro
         registerCommand('extension.vsKubernetesEdit', (node: ClusterExplorerResourceNode) => editKubernetes(kubectl, node)),
         registerCommand('extension.vsKubernetesEditLegacy', (node: ClusterExplorerResourceNode) => editKubernetesLegacy(kubectl, node)),
         registerCommand('extension.vsKubernetesServiceBridge', (node: ClusterExplorerResourceNode) => bridgeKubernetesService(kubectl, node)),
+        registerCommand('extension.vsKubernetesTransferServiceOwnership', (node: ClusterExplorerResourceNode) => transferKubernetesServiceOwnership(kubectl, node)),
+        registerCommand('extension.vsKubernetesRemoveServiceKeepAnnotation', (node: ClusterExplorerResourceNode) => removeKubernetesServiceKeepAnnotation(kubectl, node)),
         registerCommand('extension.vsKubernetesServiceBridgeRecover', (node: ClusterExplorerResourceNode) => bridgeKubernetesServiceRecover(kubectl, node)),
         registerCommand('extension.vsKubernetesApply', applyKubernetes),
         registerCommand('extension.vsKubernetesRestart', restartKubernetes),
@@ -1798,6 +1800,9 @@ interface SimpleService {
         annotations: {
             [key: string]: string;
         };
+        labels: {
+            [key: string]: string;
+        };
     };
     spec: {
         selector: {
@@ -1860,6 +1865,80 @@ async function bridgeKubernetesServiceRecover(kubectl: Kubectl, node: ClusterExp
                 source.spec.selector[k.substring(originSelectorPrefix.length)] = v;
             }
         }
+        diff(JSON.stringify(source, null, "    "), null, differenceCallback);
+    } else {
+        vscode.window.showInformationMessage(`Kubectl: unable to get service definition of ${ns}/${kind}`);
+    }
+}
+
+async function transferKubernetesServiceOwnership(kubectl: Kubectl, node: ClusterExplorerResourceNode) {
+    const ns = node.namespace;
+    const kind = node.kindName;
+    let er = await kubectl.invokeCommand(`-n ${ns} get ${kind} -o json`);
+    if (ExecResult.succeeded(er)) {
+        const source: SimpleService = JSON.parse(er.stdout);
+        er = await kubectl.invokeCommand(`get namespaces -o json`);
+        if (ExecResult.succeeded(er)) {
+            const namespaces: { items: { metadata: { name: string } }[] } = JSON.parse(er.stdout);
+            const namespace = await vscode.window.showQuickPick(namespaces.items.map((n) => n.metadata.name),
+                { title: `Choose namespace that target service located in:`, canPickMany: false });
+            if (namespace) {
+                er = await kubectl.invokeCommand(`-n ${namespace} get services -o json`);
+                if (ExecResult.succeeded(er)) {
+                    const services: { items: SimpleService[] } = JSON.parse(er.stdout);
+                    const service = await vscode.window.showQuickPick(services.items.map((s) => s.metadata.name),
+                        { title: `Choose the target service that ${node.name} will change its ownership to:`, canPickMany: false });
+                    const target = services.items.filter((i) => i.metadata.name === service)[0];
+                    if (service && target) {
+                        const annotations = [
+                            "meta.helm.sh/release-name",
+                            "meta.helm.sh/release-namespace",
+                        ];
+                        const labels = [
+                            "app.kubernetes.io/instance",
+                            "app.kubernetes.io/managed-by",
+                            "app.kubernetes.io/name",
+                            "app.kubernetes.io/version",
+                            "helm.sh/chart",
+                            "helm.toolkit.fluxcd.io/name",
+                            "helm.toolkit.fluxcd.io/namespace",
+                        ];
+                        for (const k of annotations) {
+                            if (target.metadata.annotations[k]) {
+                                source.metadata.annotations[k] = target.metadata.annotations[k];
+                            }
+                        }
+                        for (const k of labels) {
+                            if (target.metadata.labels[k]) {
+                                source.metadata.labels[k] = target.metadata.labels[k];
+                            }
+                        }
+                        source.metadata.annotations['helm.sh/resource-policy'] = "keep";
+                        diff(JSON.stringify(source, null, "    "), null, differenceCallback);
+                    } else {
+                        vscode.window.showInformationMessage(`Kubectl: user not select target service, which is required..`);
+                    }
+                } else {
+                    vscode.window.showInformationMessage(`Kubectl: unable to list services in ${namespace}.`);
+                }
+            } else {
+                vscode.window.showInformationMessage(`Kubectl: user not select namespace, which is required.`);
+            }
+        } else {
+            vscode.window.showInformationMessage(`Kubectl: unable to list namespaces.`);
+        }
+    } else {
+        vscode.window.showInformationMessage(`Kubectl: unable to get service definition of ${ns}/${kind}`);
+    }
+}
+
+async function removeKubernetesServiceKeepAnnotation(kubectl: Kubectl, node: ClusterExplorerResourceNode) {
+    const ns = node.namespace;
+    const kind = node.kindName;
+    const er = await kubectl.invokeCommand(`-n ${ns} get ${kind} -o json`);
+    if (ExecResult.succeeded(er)) {
+        const source: SimpleService = JSON.parse(er.stdout);
+        delete source.metadata.annotations["helm.sh/resource-policy"];
         diff(JSON.stringify(source, null, "    "), null, differenceCallback);
     } else {
         vscode.window.showInformationMessage(`Kubectl: unable to get service definition of ${ns}/${kind}`);
