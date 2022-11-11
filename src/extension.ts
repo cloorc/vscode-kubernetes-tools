@@ -881,7 +881,7 @@ async function execInNodeShell(kubectl: Kubectl, node: ResourceNode) {
         const create = `-n default --restart=Never -it --rm --image overriden --overrides '${JSON.stringify(spec)}'`;
         const reuse = `-n default -it -- bash`;
 
-        const exists = await findPodByName(pod);
+        const exists = await findPodByName(pod, "default");
         let command = `run ${pod} ${create}`;
         if (exists && exists.data && exists.data.status.containerStatuses[0].state.running) {
             command = `exec ${pod} ${reuse}`;
@@ -977,8 +977,8 @@ async function findPodsByLabel(labelQuery: string): Promise<FindPodsResult> {
     return await findPodsCore(`-l ${labelQuery}`);
 }
 
-async function findPodByName(name: string): Promise<OperationResult<Pod>> {
-    const podList = await kubectl.asJson<Pod>(` get pods -o json ${name}`);
+async function findPodByName(name: string, namespace: string): Promise<OperationResult<Pod>> {
+    const podList = await kubectl.asJson<Pod>(` -n ${namespace} get pods -o json ${name}`);
 
     if (failed(podList)) {
         vscode.window.showErrorMessage('Kubectl command failed: ' + podList.error[0]);
