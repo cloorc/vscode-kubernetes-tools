@@ -457,15 +457,45 @@ async function helmFetchCore(chartId: string, version: string | undefined): Prom
 
 export async function helmInstall(kubectl: Kubectl, helmObject: helmrepoexplorer.HelmObject | undefined): Promise<void> {
     if (!helmObject) {
-        const id = await vscode.window.showInputBox({ prompt: "Chart to install", placeHolder: "stable/mychart" });
-        if (id) {
-            helmInstallCore(kubectl, id, undefined);
+        const values = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.document.getText() : undefined;
+        if (!values) {
+            vscode.window.showWarningMessage(`Invalid values, please check it and try again.`);
+            return;
         }
+        const repos: helmrepoexplorer.HelmRepo[] = (await helmRepoExplorer.getChildren()) as helmrepoexplorer.HelmRepo[] || [];
+        const repoDictionary: Map<string, helmrepoexplorer.HelmRepo> = new Map();
+        repos.forEach((r) => repoDictionary.set(r.name, r));
+        const repoId = await vscode.window.showQuickPick(repos.map((r) => r.name), { canPickMany: false });
+        if (!repoId || !repoDictionary.has(repoId)) {
+            vscode.window.showErrorMessage(`Helm repository ${repoId} is missing or mismatch.`);
+            return;
+        }
+        const charts = (await helmRepoExplorer.getChildren(repoDictionary.get(repoId))) as helmrepoexplorer.HelmRepoChart[] || [];
+        const chartDictionary = new Map<string, helmrepoexplorer.HelmRepoChart>();
+        charts.forEach((c) => chartDictionary.set(c.id, c));
+        const chartId = await vscode.window.showQuickPick(charts.map((r) => r.id), { canPickMany: false });
+        if (!chartId || !shell.isSafe(chartId) || !chartDictionary.has(chartId)) {
+            vscode.window.showErrorMessage(`Helm chart name ${chartId} is required.`);
+            return;
+        }
+        const versions = (await helmRepoExplorer.getChildren(chartDictionary.get(chartId))) as helmrepoexplorer.HelmRepoChartVersion[];
+        const versionDictionary = new Map<string, helmrepoexplorer.HelmRepoChartVersion>();
+        versions.forEach((v) => versionDictionary.set(v.version, v));
+        const version = await vscode.window.showQuickPick(versions.map((r) => r.version), { canPickMany: false });
+        if (!version || !shell.isSafe(version) || !versionDictionary.has(version)) {
+            vscode.window.showErrorMessage(`Helm chart version ${version} is required.`);
+            return;
+        }
+        const release = await vscode.window.showInputBox({ title: `Please specify the release name:` });
+        if (release) {
+            helmInstallCore(kubectl, release, chartId, version, values);
+        }
+        return;
     }
     if (helmrepoexplorer.isHelmRepoChart(helmObject)) {
-        await helmInstallCore(kubectl, helmObject.id, undefined);
+        await helmInstallCore(kubectl, undefined, helmObject.id, undefined, undefined);
     } else if (helmrepoexplorer.isHelmRepoChartVersion(helmObject)) {
-        await helmInstallCore(kubectl, helmObject.id, helmObject.version);
+        await helmInstallCore(kubectl, undefined, helmObject.id, helmObject.version, undefined);
     }
 }
 
@@ -598,7 +628,7 @@ export async function helmUpgradeWithValues(): Promise<void> {
     await vscode.window.showInformationMessage(`Installed ${chartId} as release ${releaseName}`);
 }
 
-async function helmInstallCore(kubectl: Kubectl, chartId: string, version: string | undefined): Promise<void> {
+async function helmInstallCore(kubectl: Kubectl, name: string | undefined, chartId: string, version: string | undefined, values: string | undefined): Promise<void> {
     if (!shell.isSafe(chartId)) {
         vscode.window.showWarningMessage(`Unexpected characters in chart name ${chartId}. Use Helm CLI to install this chart.`);
         return;
@@ -612,8 +642,8 @@ async function helmInstallCore(kubectl: Kubectl, chartId: string, version: strin
     const ns = await currentNamespace(kubectl);
     const nsArg = ns ? `--namespace ${ns}` : '';
     const versionArg = version ? `--version ${version}` : '';
-    const generateNameArg = (syntaxVersion === HelmSyntaxVersion.V3) ? '--generate-name' : '';
-    const sr = await helmExecAsync(`install ${chartId} ${versionArg} ${nsArg} ${generateNameArg}`);
+    const generateNameArg = (!name && syntaxVersion === HelmSyntaxVersion.V3) ? '--generate-name' : '';
+    const sr = await helmExecAsync(`install ${name || ""} ${chartId} ${versionArg} ${nsArg} ${generateNameArg}`, values);
     if (!sr || sr.code !== 0) {
         const message = sr ? sr.stderr : "Unable to run Helm";
         logger.log(message);
