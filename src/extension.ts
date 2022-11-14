@@ -10,11 +10,11 @@ import * as path from 'path';
 import { fs } from './fs';
 
 // External dependencies
-import * as yaml from 'js-yaml';
 import dockerfileParse = require('dockerfile-parse');
 import * as tmp from 'tmp';
 import * as clipboard from './components/platform/clipboard';
 import { pullAll } from 'lodash';
+import * as fflate from 'fflate';
 
 // Internal dependencies
 import { host } from './host';
@@ -63,7 +63,7 @@ import { KubernetesCompletionProvider } from "./yaml-support/yaml-snippet";
 import { showWorkspaceFolderPick } from './hostutils';
 import { KubernetesResourceVirtualFileSystemProvider, K8S_RESOURCE_SCHEME, kubefsUri, K8S_RESOURCE_SCHEME_READONLY, KUBECTL_DESCRIBE_AUTHORITY } from './kuberesources.virtualfs';
 import { KubernetesResourceLinkProvider } from './kuberesources.linkprovider';
-import { Container, isKubernetesResource, KubernetesCollection, Pod, KubernetesResource } from './kuberesources.objectmodel';
+import { Container, isKubernetesResource, KubernetesCollection, Pod, KubernetesResource, Secret } from './kuberesources.objectmodel';
 import { setActiveKubeconfig, getKnownKubeconfigs, addKnownKubeconfig } from './components/config/config';
 import { HelmDocumentSymbolProvider } from './helm.symbolProvider';
 import { findParentYaml } from './yaml-support/yaml-navigation';
@@ -94,6 +94,7 @@ import * as etcd from './etcdcluster';
 import * as minio from './miniocluster';
 import * as gitlab from './gitlab.explorer';
 import * as fe from './home.explorer';
+import YAML = require('js-yaml');
 
 let explainActive = false;
 let swaggerSpecPromise: Promise<explainer.SwaggerModel | undefined> | null = null;
@@ -183,7 +184,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<APIBro
 
         // Commands - Kubernetes
         registerCommand('extension.vsKubernetesCreate',
-            () => maybeRunKubernetesCommandForActiveWindow('create', "Kubernetes Creating...")
+            () => maybeRunKubernetesCommandForActiveWindow('create', "Kubernetes Creating...", undefined)
         ),
         registerCommand('extension.vsKubernetesCreateFile',
             (uri: vscode.Uri) => kubectlUtils.createResourceFromUri(uri, kubectl)),
@@ -518,7 +519,7 @@ function provideHoverJson(document: vscode.TextDocument, position: vscode.Positi
 
 function provideHoverYaml(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Promise<vscode.Hover | null> {
     const syntax: Syntax = {
-        parse: (text) => yaml.safeLoad(text),
+        parse: (text) => YAML.load(text),
         findParent: (document, parentLine) => findParentYaml(document, parentLine)
     };
     return provideHover(document, position, token, syntax);
@@ -634,7 +635,7 @@ function initStatusBar() {
 // Expects that it can append a filename to 'command' to create a complete kubectl command.
 //
 // @parameter command string The command to run
-function maybeRunKubernetesCommandForActiveWindow(command: string, progressMessage: string) {
+function maybeRunKubernetesCommandForActiveWindow(command: string, progressMessage: string, cb: Callback | undefined) {
     let text: string;
 
     const editor = vscode.window.activeTextEditor;
@@ -651,7 +652,12 @@ function maybeRunKubernetesCommandForActiveWindow(command: string, progressMessa
     const isKubernetesSyntax = (editor.document.languageId === 'json' || editor.document.languageId === 'yaml');
     const couldUpdateSchema = (command === 'create' || command === 'apply');  // This is a very crude test in case we modified a CRD
     const resultHandler: (er: ExecResult) => void = isKubernetesSyntax ?
-        (er) => kubectl.reportResult(er, { updateSchemasOnSuccess: couldUpdateSchema }) :
+        (er) => {
+            kubectl.reportResult(er, { updateSchemasOnSuccess: couldUpdateSchema });
+            if (cb) {
+                cb();
+            }
+        } :
         (er) => {
             if (er.resultKind === 'exec-succeeded') {
                 if (command === 'create' || command === 'apply') {
@@ -660,6 +666,9 @@ function maybeRunKubernetesCommandForActiveWindow(command: string, progressMessa
                     updateYAMLSchema();
                 }
                 vscode.window.showInformationMessage(er.stdout);
+                if (cb) {
+                    cb();
+                }
             } else {
                 vscode.window.showErrorMessage(`Kubectl command failed. The open document might not be a valid Kubernetes resource.  Details: ${ExecResult.failureMessage(er, {})}`);
             }
@@ -1029,6 +1038,23 @@ async function findDebugPodsForApp(): Promise<FindPodsResult> {
     return await findPodsByLabel(`run=${appName}-debug`);
 }
 
+async function findHelmReleaseRevisons(name: string, namespace: string): Promise<FindSecretsResult> {
+    const podList = await kubectl.asJson<FindSecretsResult>(` -n ${namespace} get secrets -o json -l name=${name},owner=helm`);
+
+    if (failed(podList)) {
+        vscode.window.showErrorMessage('Kubectl command failed: ' + podList.error[0]);
+        return { succeeded: false, items: [] };
+    }
+
+    try {
+        return { succeeded: true, items: podList.result.items };
+    } catch (ex) {
+        console.log(ex);
+        vscode.window.showErrorMessage('unexpected error: ' + ex);
+        return { succeeded: false, items: [] };
+    }
+}
+
 export interface OperationResult<T> {
     readonly succeeded: boolean;
     readonly data: T | undefined;
@@ -1038,6 +1064,13 @@ export interface FindPodsResult {
     readonly succeeded: boolean;
     readonly pods: Pod[];
 }
+
+export interface FindSecretsResult {
+    readonly succeeded: boolean;
+    readonly items: Secret[];
+}
+
+type Callback = () => any;
 
 function findNameAndImage() {
     return {
@@ -1215,7 +1248,7 @@ function findKindNameForText(text: string): Errorable<ResourceKindName> {
 
 function findKindNamesForText(text: string): Errorable<ResourceKindName[]> {
     try {
-        const objs: {}[] = yaml.safeLoadAll(text);
+        const objs: {}[] = YAML.loadAll(text) as {}[];
         if (objs.some((o) => !isKubernetesResource(o))) {
             if (objs.length === 1) {
                 return { succeeded: false, error: ['the open document is not a Kubernetes resource'] };
@@ -1794,7 +1827,7 @@ async function editKubernetes(kubectl: Kubectl, node: ClusterExplorerResourceNod
     });
 }
 
-interface SimpleService {
+interface BasicKubernetesObject {
     metadata: {
         name: string;
         annotations: {
@@ -1804,6 +1837,7 @@ interface SimpleService {
             [key: string]: string;
         };
     };
+    kind: string;
     spec: {
         selector: {
             [key: string]: string;
@@ -1816,15 +1850,15 @@ async function bridgeKubernetesService(kubectl: Kubectl, node: ClusterExplorerRe
     const kind = node.kindName;
     let er = await kubectl.invokeCommand(`-n ${ns} get ${kind} -o json`);
     if (ExecResult.succeeded(er)) {
-        const source: SimpleService = JSON.parse(er.stdout);
+        const source: BasicKubernetesObject = JSON.parse(er.stdout);
         er = await kubectl.invokeCommand(`get namespaces -o json`);
         if (ExecResult.succeeded(er)) {
             const namespaces: { items: { metadata: { name: string } }[] } = JSON.parse(er.stdout);
-            const namespace = await vscode.window.showQuickPick(namespaces.items.map(n => n.metadata.name), { canPickMany: false });
+            const namespace = await vscode.window.showQuickPick(namespaces.items.map((n) => n.metadata.name), { canPickMany: false });
             if (namespace) {
                 er = await kubectl.invokeCommand(`-n ${namespace} get services -o json`);
                 if (ExecResult.succeeded(er)) {
-                    const services: { items: SimpleService[] } = JSON.parse(er.stdout);
+                    const services: { items: BasicKubernetesObject[] } = JSON.parse(er.stdout);
                     const service = await vscode.window.showQuickPick(services.items.map((s) => s.metadata.name), { canPickMany: false });
                     const target = services.items.filter((i) => i.metadata.name === service)[0];
                     if (service && target) {
@@ -1834,7 +1868,7 @@ async function bridgeKubernetesService(kubectl: Kubectl, node: ClusterExplorerRe
                             }
                         }
                         source.spec.selector = target.spec.selector;
-                        diff(JSON.stringify(source, null, "    "), null, differenceCallback);
+                        diff(JSON.stringify(source, null, "    "), null, differenceCallback, undefined);
                     } else {
                         vscode.window.showInformationMessage(`Kubectl: user not select target service, which is required..`);
                     }
@@ -1857,7 +1891,7 @@ async function bridgeKubernetesServiceRecover(kubectl: Kubectl, node: ClusterExp
     const kind = node.kindName;
     let er = await kubectl.invokeCommand(`-n ${ns} get ${kind} -o json`);
     if (ExecResult.succeeded(er)) {
-        const source: SimpleService = JSON.parse(er.stdout);
+        const source: BasicKubernetesObject = JSON.parse(er.stdout);
         er = await kubectl.invokeCommand(`get namespaces -o json`);
         source.spec.selector = {};
         for (const [k, v] of Object.entries(source.metadata.annotations)) {
@@ -1865,7 +1899,7 @@ async function bridgeKubernetesServiceRecover(kubectl: Kubectl, node: ClusterExp
                 source.spec.selector[k.substring(originSelectorPrefix.length)] = v;
             }
         }
-        diff(JSON.stringify(source, null, "    "), null, differenceCallback);
+        diff(JSON.stringify(source, null, "    "), null, differenceCallback, undefined);
     } else {
         vscode.window.showInformationMessage(`Kubectl: unable to get service definition of ${ns}/${kind}`);
     }
@@ -1876,7 +1910,7 @@ async function transferKubernetesServiceOwnership(kubectl: Kubectl, node: Cluste
     const kind = node.kindName;
     let er = await kubectl.invokeCommand(`-n ${ns} get ${kind} -o json`);
     if (ExecResult.succeeded(er)) {
-        const source: SimpleService = JSON.parse(er.stdout);
+        const source: BasicKubernetesObject = JSON.parse(er.stdout);
         er = await kubectl.invokeCommand(`get namespaces -o json`);
         if (ExecResult.succeeded(er)) {
             const namespaces: { items: { metadata: { name: string } }[] } = JSON.parse(er.stdout);
@@ -1885,14 +1919,14 @@ async function transferKubernetesServiceOwnership(kubectl: Kubectl, node: Cluste
             if (namespace) {
                 er = await kubectl.invokeCommand(`-n ${namespace} get services -o json`);
                 if (ExecResult.succeeded(er)) {
-                    const services: { items: SimpleService[] } = JSON.parse(er.stdout);
+                    const services: { items: BasicKubernetesObject[] } = JSON.parse(er.stdout);
                     const service = await vscode.window.showQuickPick(services.items.map((s) => s.metadata.name),
                         { title: `Choose the target service that ${node.name} will change its ownership to:`, canPickMany: false });
                     const target = services.items.filter((i) => i.metadata.name === service)[0];
                     if (service && target) {
                         const annotations = [
-                            "meta.helm.sh/release-name",
-                            "meta.helm.sh/release-namespace",
+                            helm.HELM_ANNOTATION_RELEASE_NAME,
+                            helm.HELM_ANNOTATION_RELEASE_NAMESPACE,
                         ];
                         const labels = [
                             "app.kubernetes.io/instance",
@@ -1903,6 +1937,8 @@ async function transferKubernetesServiceOwnership(kubectl: Kubectl, node: Cluste
                             "helm.toolkit.fluxcd.io/name",
                             "helm.toolkit.fluxcd.io/namespace",
                         ];
+                        const releaseName = source.metadata.annotations[helm.HELM_ANNOTATION_RELEASE_NAME];
+                        const namespace = source.metadata.annotations[helm.HELM_ANNOTATION_RELEASE_NAMESPACE];
                         for (const k of annotations) {
                             if (target.metadata.annotations[k]) {
                                 source.metadata.annotations[k] = target.metadata.annotations[k];
@@ -1913,8 +1949,49 @@ async function transferKubernetesServiceOwnership(kubectl: Kubectl, node: Cluste
                                 source.metadata.labels[k] = target.metadata.labels[k];
                             }
                         }
-                        source.metadata.annotations['helm.sh/resource-policy'] = "keep";
-                        diff(JSON.stringify(source, null, "    "), null, differenceCallback);
+                        source.metadata.annotations[helm.HELM_ANNOTATION_RESOURCE_POLICY] = "keep";
+                        diff(JSON.stringify(source, null, "    "), null, differenceCallback, () => {
+                            findHelmReleaseRevisons(releaseName, namespace).then((secrets) => {
+                                if (secrets && secrets.items && secrets.items.length > 0) {
+                                    const release = secrets.items[secrets.items.length - 1].data.release;
+                                    const raw = Buffer.from(Buffer.from(release, "base64").toString(), "base64");
+                                    const jsonRaw = fflate.gunzipSync(raw);
+                                    const resource: { manifest: string } = JSON.parse(Buffer.from(jsonRaw).toString());
+                                    const manifests: string[] = [];
+                                    let target: BasicKubernetesObject | undefined;
+                                    let targetIndex = 0;
+                                    for (const mf of resource.manifest.split('\n---\n') as string[]) {
+                                        manifests.push(mf);
+                                        const obj: BasicKubernetesObject = YAML.load(mf.replaceAll(/\s*\n\s*\|/g, ' |')) as BasicKubernetesObject;
+                                        if (obj.metadata.name === source.metadata.name && obj.kind === 'Service') {
+                                            target = obj;
+                                            targetIndex = manifests.length - 1;
+                                        }
+                                    }
+                                    if (target) {
+                                        if (!target.metadata.annotations) {
+                                            target.metadata.annotations = {
+                                                [helm.HELM_ANNOTATION_RESOURCE_POLICY]: "keep"
+                                            };
+                                        } else {
+                                            target.metadata.annotations[helm.HELM_ANNOTATION_RESOURCE_POLICY] = "keep";
+                                        }
+                                        manifests[targetIndex] = YAML.dump(target, { indent: 2 });
+                                        resource.manifest = manifests.join('\n---\n');
+                                        secrets.items[0].data.release = Buffer.from(
+                                            Buffer.from(fflate.gzipSync(
+                                                Buffer.from(JSON.stringify(resource))
+                                            )).toString("base64")
+                                        ).toString("base64");
+                                        diff(YAML.dump(secrets.items[0], { indent: 4 }), null, differenceCallback, undefined);
+                                    } else {
+                                        vscode.window.showWarningMessage(`Service ${source.metadata.name} in release ${releaseName} not found.`, { modal: true });
+                                    }
+                                } else {
+                                    vscode.window.showWarningMessage(`Not changed helm release revision of ${releaseName}.`, { modal: true });
+                                }
+                            });
+                        });
                     } else {
                         vscode.window.showInformationMessage(`Kubectl: user not select target service, which is required..`);
                     }
@@ -1937,16 +2014,16 @@ async function removeKubernetesServiceKeepAnnotation(kubectl: Kubectl, node: Clu
     const kind = node.kindName;
     const er = await kubectl.invokeCommand(`-n ${ns} get ${kind} -o json`);
     if (ExecResult.succeeded(er)) {
-        const source: SimpleService = JSON.parse(er.stdout);
+        const source: BasicKubernetesObject = JSON.parse(er.stdout);
         delete source.metadata.annotations["helm.sh/resource-policy"];
-        diff(JSON.stringify(source, null, "    "), null, differenceCallback);
+        diff(JSON.stringify(source, null, "    "), null, differenceCallback, undefined);
     } else {
         vscode.window.showInformationMessage(`Kubectl: unable to get service definition of ${ns}/${kind}`);
     }
 }
 
 const applyKubernetes = () => {
-    diffKubernetesCore(differenceCallback);
+    diffKubernetesCore(differenceCallback, undefined);
 };
 
 const handleError = (err: NodeJS.ErrnoException) => {
@@ -1955,14 +2032,14 @@ const handleError = (err: NodeJS.ErrnoException) => {
     }
 };
 
-function differenceCallback(r: DiffResult) {
+function differenceCallback(r: DiffResult, cb: Callback | undefined) {
     switch (r.result) {
         case DiffResultKind.Succeeded:
             confirmOperation(
                 vscode.window.showInformationMessage as PromptFunction,
                 'Do you wish to apply this change?',
                 'Apply',
-                () => maybeRunKubernetesCommandForActiveWindow('apply', "Kubernetes Applying...")
+                () => maybeRunKubernetesCommandForActiveWindow('apply', "Kubernetes Applying...", cb)
             );
             return;
         case DiffResultKind.NoEditor:
@@ -1973,7 +2050,7 @@ function differenceCallback(r: DiffResult) {
                 vscode.window.showWarningMessage as PromptFunction,
                 `Can't show what changes will be applied (${r.reason}). Apply anyway?`,
                 'Apply',
-                () => maybeRunKubernetesCommandForActiveWindow('apply', "Kubernetes Applying...")
+                () => maybeRunKubernetesCommandForActiveWindow('apply', "Kubernetes Applying...", cb)
             );
             return;
         case DiffResultKind.NoClusterResource:
@@ -1981,7 +2058,7 @@ function differenceCallback(r: DiffResult) {
                 vscode.window.showWarningMessage as PromptFunction,
                 `Resource ${r.resourceName} does not exist - this will create a new resource.`,
                 'Create',
-                () => maybeRunKubernetesCommandForActiveWindow('create', "Kubernetes Creating...")
+                () => maybeRunKubernetesCommandForActiveWindow('create', "Kubernetes Creating...", cb)
             );
             return;
         case DiffResultKind.GetFailed:
@@ -1989,7 +2066,7 @@ function differenceCallback(r: DiffResult) {
                 vscode.window.showWarningMessage as PromptFunction,
                 `Can't show what changes will be applied - error getting existing resource (${r.stderr}). Apply anyway?`,
                 'Apply',
-                () => maybeRunKubernetesCommandForActiveWindow('apply', "Kubernetes Applying...")
+                () => maybeRunKubernetesCommandForActiveWindow('apply', "Kubernetes Applying...", cb)
             );
             return;
         case DiffResultKind.NothingToDiff:
@@ -2019,10 +2096,10 @@ function diffKubernetes(): void {
                 vscode.window.showInformationMessage("Nothing to diff");
                 return;
         }
-    });
+    }, undefined);
 }
 
-function diff(data: string | null, file: vscode.Uri | null, callback: (r: DiffResult) => void) {
+function diff(data: string | null, file: vscode.Uri | null, callback: (r: DiffResult, cb: Callback | undefined) => void, cb: Callback | undefined) {
     console.log(data, file);
     let kindName: string | null = null;
     let kindObject: Errorable<ResourceKindName> | undefined = undefined;
@@ -2034,7 +2111,7 @@ function diff(data: string | null, file: vscode.Uri | null, callback: (r: DiffRe
         fileFormat = (data.trim().length > 0 && data.trim()[0] === '{') ? "json" : "yaml";
         kindObject = findKindNameForText(data);
         if (failed(kindObject)) {
-            callback({ result: DiffResultKind.NoKindName, reason: kindObject.error[0] });
+            callback({ result: DiffResultKind.NoKindName, reason: kindObject.error[0] }, cb);
             return;
         }
         kindName = `${kindObject.result.kind}/${kindObject.result.resourceName}`;
@@ -2043,12 +2120,12 @@ function diff(data: string | null, file: vscode.Uri | null, callback: (r: DiffRe
         fileUri = shell.fileUri(filePath);
     } else if (file) {
         if (!vscode.window.activeTextEditor) {
-            callback({ result: DiffResultKind.NoEditor });
+            callback({ result: DiffResultKind.NoEditor }, cb);
             return; // No open text editor
         }
         kindObject = tryFindKindNameFromEditor();
         if (failed(kindObject)) {
-            callback({ result: DiffResultKind.NoKindName, reason: kindObject.error[0] });
+            callback({ result: DiffResultKind.NoKindName, reason: kindObject.error[0] }, cb);
             return;
         }
         kindName = `${kindObject.result.kind}/${kindObject.result.resourceName}`;
@@ -2060,22 +2137,22 @@ function diff(data: string | null, file: vscode.Uri | null, callback: (r: DiffRe
             }
         }
     } else {
-        callback({ result: DiffResultKind.NothingToDiff });
+        callback({ result: DiffResultKind.NothingToDiff }, cb);
         return;
     }
 
     if (!kindName) {
-        callback({ result: DiffResultKind.NoKindName, reason: 'Could not find a valid API object' });
+        callback({ result: DiffResultKind.NoKindName, reason: 'Could not find a valid API object' }, cb);
         return;
     }
 
     kubectl.invokeCommandThen(` get -o ${fileFormat} ${kindName}`, (er) => {
         if (er.resultKind === 'exec-errored' && er.code === 1 && er.stderr.indexOf('NotFound') >= 0) {
-            callback({ result: DiffResultKind.NoClusterResource, resourceName: kindName || undefined });  // TODO: rationalise our nulls and undefineds
+            callback({ result: DiffResultKind.NoClusterResource, resourceName: kindName || undefined }, cb);  // TODO: rationalise our nulls and undefineds
             return;
         }
         else if (er.resultKind !== 'exec-succeeded') {
-            callback({ result: DiffResultKind.GetFailed, stderr: ExecResult.failureMessage(er, {}) });
+            callback({ result: DiffResultKind.GetFailed, stderr: ExecResult.failureMessage(er, {}) }, cb);
             return;
         }
 
@@ -2087,14 +2164,15 @@ function diff(data: string | null, file: vscode.Uri | null, callback: (r: DiffRe
             shell.fileUri(serverFile),
             fileUri).then((result) => {
                 console.log(result);
-                callback({ result: DiffResultKind.Succeeded });
+                callback({ result: DiffResultKind.Succeeded }, cb);
             },
                 (err) => vscode.window.showErrorMessage(`Error running command: ${err}`));
     });
 }
-function diffKubernetesCore(callback: (r: DiffResult) => void): void {
+
+function diffKubernetesCore(callback: (r: DiffResult, cb: Callback | undefined) => void, cb: Callback | undefined): void {
     getTextForActiveWindow((data, file) => {
-        return diff(data, file, callback);
+        return diff(data, file, callback, cb);
     });
 }
 

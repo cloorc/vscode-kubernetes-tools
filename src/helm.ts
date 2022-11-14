@@ -10,6 +10,10 @@ export const FETCH_VALUES_SCHEME = "helm-get-values";
 export const HELM_OUTPUT_COLUMN_SEPARATOR = /\t+/g;
 export const HELM_VALUES_SCHEMA = 'helm-values';
 
+export const HELM_ANNOTATION_RESOURCE_POLICY = 'helm.sh/resource-policy';
+export const HELM_ANNOTATION_RELEASE_NAME = "meta.helm.sh/release-name";
+export const HELM_ANNOTATION_RELEASE_NAMESPACE = "meta.helm.sh/release-namespace";
+
 let previewShown = false;
 
 export function hasPreviewBeenShown(): boolean {

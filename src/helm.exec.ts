@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import * as filepath from 'path';
 import * as tmp from 'tmp';
 import * as vscode from 'vscode';
-import * as YAML from 'yamljs';
+import * as YAML from 'js-yaml';
 import { Context, ExecResult, ExternalBinary, invokeForResult } from './binutilplusplus';
 import { NODE_TYPES } from './components/clusterexplorer/explorer';
 import { ClusterExplorerHelmReleaseNode, ClusterExplorerNode } from './components/clusterexplorer/node';
@@ -25,7 +25,7 @@ import { ExecCallback, shell as sh, ShellResult } from './shell';
 import { openHelmGeneratedValuesFile, preview } from './utils/preview';
 import * as fs from './wsl-fs';
 import * as shell from './shell';
-import { writeFileSync } from 'fs';
+import { writeFileSync, readFileSync } from 'fs';
 
 export interface PickChartUIOptions {
     readonly warnIfNoCharts: boolean;
@@ -778,11 +778,11 @@ interface Chart {
 }
 
 // Load a chart object
-export function loadChartMetadata(chartDir: string): Chart {
+export function loadChartMetadata(chartDir: string): Chart | undefined {
     const f = filepath.join(chartDir, "Chart.yaml");
-    let c;
+    let c: Chart | undefined;
     try {
-        c = YAML.load(f);
+        c = YAML.load(readFileSync(f, 'utf8')) as Chart;
     } catch (err) {
         vscode.window.showErrorMessage("Chart.yaml: " + err);
     }
@@ -838,7 +838,7 @@ export function pickChartForFile(file: string, options: PickChartUIOptions, fn: 
 function findChartFiles() {
     // Excluding "**/node_modules/**" as a common cause of excessive CPU usage.
     // https://github.com/microsoft/vscode/issues/75314#issuecomment-503195666
-    return vscode.workspace.findFiles("**/Chart.yaml", "**/node_modules/**", 1024)
+    return vscode.workspace.findFiles("**/Chart.yaml", "**/node_modules/**", 1024);
 }
 
 // helmExec appends 'args' to a Helm command (helm args...), executes it, and then sends the result to te callback.
@@ -995,7 +995,7 @@ export function insertRequirement() {
         }
         const ed = vscode.window.activeTextEditor;
         if (!ed) {
-            logger.log(YAML.stringify(req));
+            logger.log(YAML.dump(req));
             return;
         }
         ed.insertSnippet(new vscode.SnippetString(req.toString()));
@@ -1015,14 +1015,15 @@ export function searchForChart(name: string): Requirement | undefined {
         vscode.window.showErrorMessage(`Helm repositories file ${reposFile} not found.`);
         return undefined;
     }
-    const repos: HelmRepositoriesFile = YAML.load(reposFile);
+    const repos: HelmRepositoriesFile = YAML.load(reposFile) as HelmRepositoriesFile;
     let req;
     repos.repositories.forEach((repo) => {
         if (repo.name === parts[0]) {
-            const cache = YAML.load(repo.cache);
-            _.each(cache.entries, (releases, name) => {
+            const cache = YAML.load(repo.cache) as { entries: [] };
+            _.each(cache.entries, (releases, n) => {
+                const name = n.toString();
                 if (name === parts[1]) {
-                    req = new Requirement(repo.url, name, releases[0].version);
+                    req = new Requirement(repo.url, name, (releases as { version: string }[])[0].version);
                     return;
                 }
             });

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as filepath from 'path';
 import * as exec from './helm.exec';
-import * as YAML from 'yamljs';
+import * as YAML from 'js-yaml';
 import * as fs from './wsl-fs';
 import { escape as htmlEscape } from 'lodash';
 import * as querystring from 'querystring';
@@ -198,7 +198,7 @@ export class HelmTemplatePreviewDocumentProvider implements vscode.TextDocumentC
 
                         if (filepath.basename(reltpl) !== "NOTES.txt") {
                             try {
-                                YAML.parse(out);
+                                YAML.load(out);
                             } catch (e) {
                                 // TODO: Figure out the best way to display this message, but have it go away when the
                                 // file parses correctly.

@@ -68,6 +68,13 @@ export interface ContainerStatus {
     };
 }
 
+export interface Secret extends KubernetesResource {
+    readonly type: string;
+    readonly data: {
+        release: string;
+    };
+}
+
 function isObjectMeta(obj: any): obj is ObjectMeta {
     return obj && obj.name;
 }

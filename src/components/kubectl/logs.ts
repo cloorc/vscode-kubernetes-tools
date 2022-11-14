@@ -221,7 +221,7 @@ async function logsForPod(kubectl: Kubectl): Promise<void> {
 async function logsForPodFromOpenDocument(kubectl: Kubectl, editor: vscode.TextEditor) {
     const text = editor.document.getText();
     try {
-        const obj: any = yaml.safeLoad(text);
+        const obj: any = yaml.load(text);
         if (isPod(obj)) {
             // document describes a pod.
             const podSummary = {

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { FuncMap } from './helm.funcmap';
 import * as logger from './logger';
-import * as YAML from 'yamljs';
+import * as YAML from 'js-yaml';
 import * as exec from './helm.exec';
 import * as path from 'path';
 import * as _ from 'lodash';
