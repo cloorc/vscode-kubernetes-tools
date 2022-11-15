@@ -1867,8 +1867,8 @@ async function bridgeKubernetesService(kubectl: Kubectl, node: ClusterExplorerRe
                                 source.metadata.annotations[`${originSelectorPrefix}${k}`] = v;
                             }
                         }
-                        source.spec.selector = target.spec.selector;
-                        diff(JSON.stringify(source, null, "    "), null, differenceCallback, undefined);
+                        source.spec.selector = { ...target.spec.selector };
+                        diff(JSON.stringify(source, null, "    "), null, differenceCallback, undefined, "replace");
                     } else {
                         vscode.window.showInformationMessage(`Kubectl: user not select target service, which is required..`);
                     }
@@ -1899,7 +1899,7 @@ async function bridgeKubernetesServiceRecover(kubectl: Kubectl, node: ClusterExp
                 source.spec.selector[k.substring(originSelectorPrefix.length)] = v;
             }
         }
-        diff(JSON.stringify(source, null, "    "), null, differenceCallback, undefined);
+        diff(JSON.stringify(source, null, "    "), null, differenceCallback, undefined, "replace");
     } else {
         vscode.window.showInformationMessage(`Kubectl: unable to get service definition of ${ns}/${kind}`);
     }
@@ -1953,7 +1953,10 @@ async function transferKubernetesServiceOwnership(kubectl: Kubectl, node: Cluste
                         diff(JSON.stringify(source, null, "    "), null, differenceCallback, () => {
                             findHelmReleaseRevisons(releaseName, namespace).then((secrets) => {
                                 if (secrets && secrets.items && secrets.items.length > 0) {
-                                    const release = secrets.items[secrets.items.length - 1].data.release;
+                                    const prefix = 'sh.helm.release.v1.gerrit.v';
+                                    const revision = secrets.items.length - 1;
+                                    secrets.items.sort((a, b) => parseFloat(a.metadata.name.substring(prefix.length)) - parseFloat(b.metadata.name.substring(prefix.length)));
+                                    const release = secrets.items[revision].data.release;
                                     const raw = Buffer.from(Buffer.from(release, "base64").toString(), "base64");
                                     const jsonRaw = fflate.gunzipSync(raw);
                                     const resource: { manifest: string } = JSON.parse(Buffer.from(jsonRaw).toString());
@@ -1978,12 +1981,12 @@ async function transferKubernetesServiceOwnership(kubectl: Kubectl, node: Cluste
                                         }
                                         manifests[targetIndex] = YAML.dump(target, { indent: 2 });
                                         resource.manifest = manifests.join('\n---\n');
-                                        secrets.items[0].data.release = Buffer.from(
+                                        secrets.items[revision].data.release = Buffer.from(
                                             Buffer.from(fflate.gzipSync(
                                                 Buffer.from(JSON.stringify(resource))
                                             )).toString("base64")
                                         ).toString("base64");
-                                        diff(YAML.dump(secrets.items[0], { indent: 4 }), null, differenceCallback, undefined);
+                                        diff(YAML.dump(secrets.items[revision], { indent: 4 }), null, differenceCallback, undefined, "replace");
                                     } else {
                                         vscode.window.showWarningMessage(`Service ${source.metadata.name} in release ${releaseName} not found.`, { modal: true });
                                     }
@@ -1991,7 +1994,7 @@ async function transferKubernetesServiceOwnership(kubectl: Kubectl, node: Cluste
                                     vscode.window.showWarningMessage(`Not changed helm release revision of ${releaseName}.`, { modal: true });
                                 }
                             });
-                        });
+                        }, "replace");
                     } else {
                         vscode.window.showInformationMessage(`Kubectl: user not select target service, which is required..`);
                     }
@@ -2016,14 +2019,14 @@ async function removeKubernetesServiceKeepAnnotation(kubectl: Kubectl, node: Clu
     if (ExecResult.succeeded(er)) {
         const source: BasicKubernetesObject = JSON.parse(er.stdout);
         delete source.metadata.annotations["helm.sh/resource-policy"];
-        diff(JSON.stringify(source, null, "    "), null, differenceCallback, undefined);
+        diff(JSON.stringify(source, null, "    "), null, differenceCallback, undefined, undefined);
     } else {
         vscode.window.showInformationMessage(`Kubectl: unable to get service definition of ${ns}/${kind}`);
     }
 }
 
 const applyKubernetes = () => {
-    diffKubernetesCore(differenceCallback, undefined);
+    diffKubernetesCore(differenceCallback, undefined, undefined);
 };
 
 const handleError = (err: NodeJS.ErrnoException) => {
@@ -2032,14 +2035,14 @@ const handleError = (err: NodeJS.ErrnoException) => {
     }
 };
 
-function differenceCallback(r: DiffResult, cb: Callback | undefined) {
+function differenceCallback(r: DiffResult, cb: Callback | undefined, cmd: string | undefined) {
     switch (r.result) {
         case DiffResultKind.Succeeded:
             confirmOperation(
                 vscode.window.showInformationMessage as PromptFunction,
                 'Do you wish to apply this change?',
                 'Apply',
-                () => maybeRunKubernetesCommandForActiveWindow('apply', "Kubernetes Applying...", cb)
+                () => maybeRunKubernetesCommandForActiveWindow(cmd || 'apply', "Kubernetes Applying...", cb)
             );
             return;
         case DiffResultKind.NoEditor:
@@ -2050,7 +2053,7 @@ function differenceCallback(r: DiffResult, cb: Callback | undefined) {
                 vscode.window.showWarningMessage as PromptFunction,
                 `Can't show what changes will be applied (${r.reason}). Apply anyway?`,
                 'Apply',
-                () => maybeRunKubernetesCommandForActiveWindow('apply', "Kubernetes Applying...", cb)
+                () => maybeRunKubernetesCommandForActiveWindow(cmd || 'apply', "Kubernetes Applying...", cb)
             );
             return;
         case DiffResultKind.NoClusterResource:
@@ -2058,7 +2061,7 @@ function differenceCallback(r: DiffResult, cb: Callback | undefined) {
                 vscode.window.showWarningMessage as PromptFunction,
                 `Resource ${r.resourceName} does not exist - this will create a new resource.`,
                 'Create',
-                () => maybeRunKubernetesCommandForActiveWindow('create', "Kubernetes Creating...", cb)
+                () => maybeRunKubernetesCommandForActiveWindow(cmd || 'create', "Kubernetes Creating...", cb)
             );
             return;
         case DiffResultKind.GetFailed:
@@ -2066,7 +2069,7 @@ function differenceCallback(r: DiffResult, cb: Callback | undefined) {
                 vscode.window.showWarningMessage as PromptFunction,
                 `Can't show what changes will be applied - error getting existing resource (${r.stderr}). Apply anyway?`,
                 'Apply',
-                () => maybeRunKubernetesCommandForActiveWindow('apply', "Kubernetes Applying...", cb)
+                () => maybeRunKubernetesCommandForActiveWindow(cmd || 'apply', "Kubernetes Applying...", cb)
             );
             return;
         case DiffResultKind.NothingToDiff:
@@ -2096,10 +2099,10 @@ function diffKubernetes(): void {
                 vscode.window.showInformationMessage("Nothing to diff");
                 return;
         }
-    }, undefined);
+    }, undefined, undefined);
 }
 
-function diff(data: string | null, file: vscode.Uri | null, callback: (r: DiffResult, cb: Callback | undefined) => void, cb: Callback | undefined) {
+function diff(data: string | null, file: vscode.Uri | null, callback: (r: DiffResult, cb: Callback | undefined, cmd: string | undefined) => void, cb: Callback | undefined, cmd: string | undefined) {
     console.log(data, file);
     let kindName: string | null = null;
     let kindObject: Errorable<ResourceKindName> | undefined = undefined;
@@ -2111,7 +2114,7 @@ function diff(data: string | null, file: vscode.Uri | null, callback: (r: DiffRe
         fileFormat = (data.trim().length > 0 && data.trim()[0] === '{') ? "json" : "yaml";
         kindObject = findKindNameForText(data);
         if (failed(kindObject)) {
-            callback({ result: DiffResultKind.NoKindName, reason: kindObject.error[0] }, cb);
+            callback({ result: DiffResultKind.NoKindName, reason: kindObject.error[0] }, cb, cmd);
             return;
         }
         kindName = `${kindObject.result.kind}/${kindObject.result.resourceName}`;
@@ -2120,12 +2123,12 @@ function diff(data: string | null, file: vscode.Uri | null, callback: (r: DiffRe
         fileUri = shell.fileUri(filePath);
     } else if (file) {
         if (!vscode.window.activeTextEditor) {
-            callback({ result: DiffResultKind.NoEditor }, cb);
+            callback({ result: DiffResultKind.NoEditor }, cb, cmd);
             return; // No open text editor
         }
         kindObject = tryFindKindNameFromEditor();
         if (failed(kindObject)) {
-            callback({ result: DiffResultKind.NoKindName, reason: kindObject.error[0] }, cb);
+            callback({ result: DiffResultKind.NoKindName, reason: kindObject.error[0] }, cb, cmd);
             return;
         }
         kindName = `${kindObject.result.kind}/${kindObject.result.resourceName}`;
@@ -2137,22 +2140,22 @@ function diff(data: string | null, file: vscode.Uri | null, callback: (r: DiffRe
             }
         }
     } else {
-        callback({ result: DiffResultKind.NothingToDiff }, cb);
+        callback({ result: DiffResultKind.NothingToDiff }, cb, cmd);
         return;
     }
 
     if (!kindName) {
-        callback({ result: DiffResultKind.NoKindName, reason: 'Could not find a valid API object' }, cb);
+        callback({ result: DiffResultKind.NoKindName, reason: 'Could not find a valid API object' }, cb, cmd);
         return;
     }
 
     kubectl.invokeCommandThen(` get -o ${fileFormat} ${kindName}`, (er) => {
         if (er.resultKind === 'exec-errored' && er.code === 1 && er.stderr.indexOf('NotFound') >= 0) {
-            callback({ result: DiffResultKind.NoClusterResource, resourceName: kindName || undefined }, cb);  // TODO: rationalise our nulls and undefineds
+            callback({ result: DiffResultKind.NoClusterResource, resourceName: kindName || undefined }, cb, cmd);  // TODO: rationalise our nulls and undefineds
             return;
         }
         else if (er.resultKind !== 'exec-succeeded') {
-            callback({ result: DiffResultKind.GetFailed, stderr: ExecResult.failureMessage(er, {}) }, cb);
+            callback({ result: DiffResultKind.GetFailed, stderr: ExecResult.failureMessage(er, {}) }, cb, cmd);
             return;
         }
 
@@ -2164,15 +2167,15 @@ function diff(data: string | null, file: vscode.Uri | null, callback: (r: DiffRe
             shell.fileUri(serverFile),
             fileUri).then((result) => {
                 console.log(result);
-                callback({ result: DiffResultKind.Succeeded }, cb);
+                callback({ result: DiffResultKind.Succeeded }, cb, cmd);
             },
                 (err) => vscode.window.showErrorMessage(`Error running command: ${err}`));
     });
 }
 
-function diffKubernetesCore(callback: (r: DiffResult, cb: Callback | undefined) => void, cb: Callback | undefined): void {
+function diffKubernetesCore(callback: (r: DiffResult, cb: Callback | undefined, cmd: string | undefined) => void, cb: Callback | undefined, cmd: string | undefined): void {
     getTextForActiveWindow((data, file) => {
-        return diff(data, file, callback, cb);
+        return diff(data, file, callback, cb, cmd);
     });
 }
 
