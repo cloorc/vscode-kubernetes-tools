@@ -459,24 +459,24 @@
                     "name": "Clusters"
                 },
                 {
-                    "id": "extension.vsKubernetesHelmRepoExplorer",
-                    "name": "Helm Repos"
-                },
-                {
-                    "id": "kubernetes.cloudExplorer",
-                    "name": "Clouds"
-                },
-                {
                     "id": "kubernetes.etcdExplorer",
                     "name": "ETCD"
+                },
+                {
+                    "id": "kubernetes.gitlabExplorer",
+                    "name": "GitLab Files"
+                },
+                {
+                    "id": "extension.vsKubernetesHelmRepoExplorer",
+                    "name": "Helm Repos"
                 },
                 {
                     "id": "kubernetes.minioExplorer",
                     "name": "MinIO"
                 },
                 {
-                    "id": "kubernetes.gitlabExplorer",
-                    "name": "GitLab Files"
+                    "id": "kubernetes.cloudExplorer",
+                    "name": "Clouds"
                 },
                 {
                     "id": "kubernetes.homeExplorer",
