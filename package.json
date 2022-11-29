@@ -770,11 +770,6 @@
                     "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource(?!\\.namespace).*/i"
                 },
                 {
-                    "command": "extension.vsKubernetesDeleteNow",
-                    "group": "2@3",
-                    "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource\\.pod/i"
-                },
-                {
                     "command": "extension.vsKubernetesTerminal",
                     "group": "2@4",
                     "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource\\.pod/i"
@@ -786,28 +781,33 @@
                 },
                 {
                     "command": "extension.vsKubernetesDebugLocalTunnel",
-                    "group": "2@5",
+                    "group": "2@6",
                     "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource\\.(pod|job|service|deployment)/i"
                 },
                 {
                     "command": "extension.vsKubernetesPortForward",
-                    "group": "2@6",
+                    "group": "2@7",
                     "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource\\.pod/i"
                 },
                 {
                     "command": "extension.vsKubernetesPortForward",
-                    "group": "2@6",
+                    "group": "2@8",
                     "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource\\.service/i"
                 },
                 {
                     "command": "extension.vsKubernetesPortForward",
-                    "group": "2@6",
+                    "group": "2@9",
                     "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource\\.deployment/i"
                 },
                 {
                     "command": "extension.vsKubernetesScale",
-                    "group": "2@6",
+                    "group": "2@10",
                     "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource\\.(deployment|job|rc|rs|statefulset)/i"
+                },
+                {
+                    "command": "extension.vsKubernetesDeleteNow",
+                    "group": "2@11",
+                    "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource\\.pod/i"
                 },
                 {
                     "command": "extension.vsKubernetesLogs",
