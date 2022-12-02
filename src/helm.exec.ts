@@ -570,13 +570,23 @@ export async function helmUpgradeWithValues(): Promise<void> {
         return;
     }
     const matched = content.match(/^#+([^\n]+)/);
-    let metadata: { tips: string; namespace: string; chart: string; releaseName: string } | undefined = undefined;
+    let metadata: { namespace: string; chart: string; releaseName: string } | undefined = undefined;
     try {
         metadata = JSON.parse(matched ? matched[1] : "{}");
     } catch (e) { }
     if (!metadata || !metadata.namespace || !metadata.releaseName) {
-        vscode.window.showWarningMessage(`Missing metadata in values, please do not remove the first comment line and try again.`);
-        return;
+        const releases = await helmListAll();
+        if (!releases || !releases.succeeded) {
+            vscode.window.showWarningMessage(`Missing metadata in values or unable to list releases.`);
+            return;
+        }
+        const releaseName = await vscode.window.showQuickPick(releases.result.map((r) => r.name), { canPickMany: false });
+        const release = releases.result.filter((r) => r.name === releaseName)[0];
+        if (!releaseName || !release) {
+            vscode.window.showWarningMessage(`Release to upgrade is required but not provided.`);
+            return;
+        }
+        metadata = {namespace: release.namespace, chart: release.chart, releaseName: releaseName};
     }
 
     if (!ensureHelm(EnsureMode.Alert)) {

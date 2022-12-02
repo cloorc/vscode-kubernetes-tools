@@ -234,7 +234,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<APIBro
         registerCommand('extension.vsKubernetesUseKubeconfig', useKubeconfigKubernetes),
         registerCommand('extension.vsKubernetesClusterInfo', clusterInfoKubernetes),
         registerCommand('extension.vsKubernetesDeleteContext', deleteContextKubernetes),
-        registerCommand('extension.vsKubernetesUseNamespace', (explorerNode: ClusterExplorerNode) => { useNamespaceKubernetes(kubectl, explorerNode); }),
+        registerCommand('extension.vsKubernetesUseNamespace', (explorerNode: ClusterExplorerNode) => { useNamespaceKubernetes(kubectl, explorerNode, { preferPick: true }); }),
         registerCommand('extension.vsKubernetesDashboard', () => { dashboardKubernetes(kubectl); }),
         registerCommand('extension.vsKubernetesAddWatch', (explorerNode: ClusterExplorerNode) => { addWatch(treeProvider, explorerNode); }),
         registerCommand('extension.vsKubernetesDeleteWatch', (explorerNode: ClusterExplorerNode) => { deleteWatch(treeProvider, explorerNode); }),
