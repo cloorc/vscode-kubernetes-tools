@@ -38,11 +38,15 @@ export async function logsKubernetes(
  * Fetches logs for a Pod. Handles use cases for fetching pods
  * from an open document, or from the current namespace.
  */
-export function logsKubernetesWithLatest300RowsAndFollow(
+export async function logsKubernetesWithLatest300RowsAndFollow(
     kubectl: Kubectl,
     explorerNode: ClusterExplorerResourceNode
 ) {
-    kubectl.invokeInNewTerminal(`logs --tail=300 -f -n ${explorerNode.namespace} ${explorerNode.name}`, `${explorerNode.namespace}/${explorerNode.name}`);
+    const ns = explorerNode?.namespace || (await vscode.window.showQuickPick((await kubectlUtils.getNamespaces(kubectl)).map((e) => e.name), { canPickMany: false }));
+    const name = explorerNode?.name || (await vscode.window.showQuickPick((await kubectlUtils.getPods(kubectl, {}, ns)).map((p) => p.name), { canPickMany: false }));
+    if (ns && name) {
+        kubectl.invokeInNewTerminal(`logs --tail=300 -f -n ${ns} ${name}`, `${ns}/${name}`);
+    }
 }
 
 export function logsKubernetesPreview(

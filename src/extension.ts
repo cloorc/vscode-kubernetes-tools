@@ -2478,6 +2478,7 @@ async function setContextKubernetes(targetContext: string) {
         activeContextTracker.setActive(targetContext);
         refreshExplorer();
         WatchManager.instance().clear();
+        useNamespaceKubernetes(kubectl, {} as ClusterExplorerNode, { preferPick: true });
     } else {
         kubectl.reportFailure(er, { whatFailed: `Failed to set '${targetContext}' as current cluster` });
     }
