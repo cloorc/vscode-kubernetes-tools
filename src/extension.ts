@@ -1600,7 +1600,7 @@ export async function getContainersForResource(resource: ContainerContainer): Pr
 }
 
 function execKubernetes() {
-    execKubernetesCore(false);
+    execKubernetesCore(true);
 }
 
 async function terminalKubernetes(explorerNode?: ClusterExplorerResourceNode) {
@@ -1620,7 +1620,7 @@ async function terminalKubernetes(explorerNode?: ClusterExplorerResourceNode) {
 
 async function execKubernetesCore(isTerminal: boolean): Promise<void> {
     const namespace = await vscode.window.showQuickPick((await kubectlUtils.getNamespaces(kubectl)).map((e) => e.name), {
-        title: `Please select the namespace:`,
+        title: `Please select the namespace that the pod running in:`,
         canPickMany: false,
         placeHolder: await kubectlUtils.currentNamespace(kubectl)
     });
@@ -1651,11 +1651,11 @@ async function execKubernetesCore(isTerminal: boolean): Promise<void> {
     }
 
     if (isTerminal) {
-        execTerminalOnContainer(pod.metadata.name, pod.metadata.namespace, container.name, cmd);
+        execTerminalOnContainer(pod.metadata.name, pod.metadata.namespace || namespace, container.name, cmd);
         return;
     }
 
-    const execCmd = `exec ${pod.metadata.name} -c ${container.name} -- ${cmd}`;
+    const execCmd = `exec -n ${pod.metadata.namespace || namespace} ${pod.metadata.name} -c ${container.name} -- ${cmd}`;
     kubectl.invokeInSharedTerminal(execCmd);
 }
 
