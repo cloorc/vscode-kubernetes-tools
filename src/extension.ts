@@ -1424,13 +1424,12 @@ enum PodSelectionScope {
     All,
 }
 
-async function selectPod(scope: PodSelectionScope, fallback: PodSelectionFallback): Promise<Pod | null> {
+async function selectPod(scope: PodSelectionScope, fallback: PodSelectionFallback, namespace: undefined|string): Promise<Pod | null> {
     let findPodsResult: FindPodsResult;
     if (scope === PodSelectionScope.App) {
         findPodsResult = await findPodsForApp();
     } else {
-        const ns = await vscode.window.showQuickPick((await kubectlUtils.getNamespaces(kubectl)).map((e) => e.name), { canPickMany: false });
-        findPodsResult = await findPodsCore(ns ? `-n ${ns}` : '');
+        findPodsResult = await findPodsCore(namespace ? `-n ${namespace}` : '');
     }
 
     if (!findPodsResult.succeeded) {
@@ -1441,7 +1440,7 @@ async function selectPod(scope: PodSelectionScope, fallback: PodSelectionFallbac
 
     if (podList.length === 0) {
         if (fallback === PodSelectionFallback.AnyPod) {
-            return selectPod(PodSelectionScope.All, PodSelectionFallback.None);
+            return selectPod(PodSelectionScope.All, PodSelectionFallback.None, namespace);
         }
         const scopeMessage = scope === PodSelectionScope.App ? "associated with this app" : "in the cluster";
         vscode.window.showErrorMessage(`Couldn't find any pods ${scopeMessage}.`);
@@ -1620,6 +1619,12 @@ async function terminalKubernetes(explorerNode?: ClusterExplorerResourceNode) {
 }
 
 async function execKubernetesCore(isTerminal: boolean): Promise<void> {
+    const namespace = await vscode.window.showQuickPick((await kubectlUtils.getNamespaces(kubectl)).map((e) => e.name), {
+        title: `Please select the namespace:`,
+        canPickMany: false,
+        placeHolder: await kubectlUtils.currentNamespace(kubectl)
+    });
+
     const opts: vscode.InputBoxOptions = { prompt: 'Please provide a command to execute' };
 
     if (isTerminal || !opts.placeHolder) {
@@ -1633,7 +1638,7 @@ async function execKubernetesCore(isTerminal: boolean): Promise<void> {
         return;
     }
 
-    const pod = await selectPod(PodSelectionScope.App, PodSelectionFallback.AnyPod);
+    const pod = await selectPod(PodSelectionScope.App, PodSelectionFallback.AnyPod, namespace);
 
     if (!pod || !pod.metadata) {
         return;
@@ -1668,7 +1673,7 @@ function execTerminalOnContainer(podName: string, podNamespace: string | undefin
 }
 
 async function syncKubernetes(): Promise<void> {
-    const pod = await selectPod(PodSelectionScope.App, PodSelectionFallback.None);
+    const pod = await selectPod(PodSelectionScope.App, PodSelectionFallback.None, undefined);
     if (!pod) {
         return;
     }
