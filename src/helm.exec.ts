@@ -26,6 +26,7 @@ import { openHelmGeneratedValuesFile, preview } from './utils/preview';
 import * as fs from './wsl-fs';
 import * as shell from './shell';
 import { writeFileSync, readFileSync } from 'fs';
+import * as kubectlUtils from './kubectlUtils';
 
 export interface PickChartUIOptions {
     readonly warnIfNoCharts: boolean;
@@ -486,16 +487,22 @@ export async function helmInstall(kubectl: Kubectl, helmObject: helmrepoexplorer
             vscode.window.showErrorMessage(`Helm chart version ${version} is required.`);
             return;
         }
+        const namespaces = (await kubectlUtils.getNamespaces(kubectl));
+        const namespace = await vscode.window.showQuickPick(namespaces.map((n) => n.name), { canPickMany: false, title: `Please select the target namespace to install:` });
+        if (!namespace) {
+            vscode.window.showErrorMessage(`Helm release namespace is required.`);
+            return;
+        }
         const release = await vscode.window.showInputBox({ title: `Please specify the release name:` });
-        if (release) {
-            helmInstallCore(kubectl, release, chartId, version, values);
+        if (!release) {
+            helmInstallCore(kubectl, release, chartId, version, values, namespace);
         }
         return;
     }
     if (helmrepoexplorer.isHelmRepoChart(helmObject)) {
-        await helmInstallCore(kubectl, undefined, helmObject.id, undefined, undefined);
+        await helmInstallCore(kubectl, undefined, helmObject.id, undefined, undefined, undefined);
     } else if (helmrepoexplorer.isHelmRepoChartVersion(helmObject)) {
-        await helmInstallCore(kubectl, undefined, helmObject.id, helmObject.version, undefined);
+        await helmInstallCore(kubectl, undefined, helmObject.id, helmObject.version, undefined, undefined);
     }
 }
 
@@ -586,7 +593,7 @@ export async function helmUpgradeWithValues(): Promise<void> {
             vscode.window.showWarningMessage(`Release to upgrade is required but not provided.`);
             return;
         }
-        metadata = {namespace: release.namespace, chart: release.chart, releaseName: releaseName};
+        metadata = { namespace: release.namespace, chart: release.chart, releaseName: releaseName };
     }
 
     if (!ensureHelm(EnsureMode.Alert)) {
@@ -638,7 +645,7 @@ export async function helmUpgradeWithValues(): Promise<void> {
     await vscode.window.showInformationMessage(`Installed ${chartId} as release ${releaseName}`);
 }
 
-async function helmInstallCore(kubectl: Kubectl, name: string | undefined, chartId: string, version: string | undefined, values: string | undefined): Promise<void> {
+async function helmInstallCore(kubectl: Kubectl, name: string | undefined, chartId: string, version: string | undefined, values: string | undefined, namespace: string | undefined): Promise<void> {
     if (!shell.isSafe(chartId)) {
         vscode.window.showWarningMessage(`Unexpected characters in chart name ${chartId}. Use Helm CLI to install this chart.`);
         return;
@@ -649,7 +656,7 @@ async function helmInstallCore(kubectl: Kubectl, name: string | undefined, chart
     }
 
     const syntaxVersion = await helmSyntaxVersion();
-    const ns = await currentNamespace(kubectl);
+    const ns = namespace || await currentNamespace(kubectl);
     const nsArg = ns ? `--namespace ${ns}` : '';
     const versionArg = version ? `--version ${version}` : '';
     const generateNameArg = (!name && syntaxVersion === HelmSyntaxVersion.V3) ? '--generate-name' : '';
