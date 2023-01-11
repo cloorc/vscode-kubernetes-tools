@@ -660,7 +660,8 @@ async function helmInstallCore(kubectl: Kubectl, name: string | undefined, chart
     const nsArg = ns ? `--namespace ${ns}` : '';
     const versionArg = version ? `--version ${version}` : '';
     const generateNameArg = (!name && syntaxVersion === HelmSyntaxVersion.V3) ? '--generate-name' : '';
-    const sr = await helmExecAsync(`install ${name || ""} ${chartId} ${versionArg} ${nsArg} ${generateNameArg}`, values);
+    const additionalArg = values ? `-f -` : '';
+    const sr = await helmExecAsync(`install ${name || ""} ${chartId} ${versionArg} ${nsArg} ${generateNameArg} ${additionalArg}`, values);
     if (!sr || sr.code !== 0) {
         const message = sr ? sr.stderr : "Unable to run Helm";
         logger.log(message);
