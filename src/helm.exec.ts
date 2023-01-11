@@ -494,7 +494,7 @@ export async function helmInstall(kubectl: Kubectl, helmObject: helmrepoexplorer
             return;
         }
         const release = await vscode.window.showInputBox({ title: `Please specify the release name:` });
-        if (!release) {
+        if (release) {
             helmInstallCore(kubectl, release, chartId, version, values, namespace);
         }
         return;
