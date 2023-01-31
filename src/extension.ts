@@ -1424,7 +1424,7 @@ enum PodSelectionScope {
     All,
 }
 
-async function selectPod(scope: PodSelectionScope, fallback: PodSelectionFallback, namespace: undefined|string): Promise<Pod | null> {
+async function selectPod(scope: PodSelectionScope, fallback: PodSelectionFallback, namespace: undefined | string): Promise<Pod | null> {
     let findPodsResult: FindPodsResult;
     if (scope === PodSelectionScope.App) {
         findPodsResult = await findPodsForApp();
@@ -1625,15 +1625,7 @@ async function execKubernetesCore(isTerminal: boolean): Promise<void> {
         placeHolder: await kubectlUtils.currentNamespace(kubectl)
     });
 
-    const opts: vscode.InputBoxOptions = { prompt: 'Please provide a command to execute' };
-
-    if (isTerminal || !opts.placeHolder) {
-        opts.value = 'bash';
-        opts.placeHolder = opts.value;
-    }
-
-    const cmd = await vscode.window.showInputBox(opts);
-
+    const cmd = await vscode.window.showQuickPick(["bash", "sh"], { title: 'Please provide a command to execute', placeHolder: 'bash' });
     if (!cmd || cmd.length === 0) {
         return;
     }
