@@ -6,6 +6,7 @@ import * as kuberesources from '../../kuberesources';
 import { Kubectl } from '../../kubectl';
 import { ClusterExplorerNode } from '../clusterexplorer/node';
 import { NODE_TYPES } from '../clusterexplorer/explorer';
+import * as config from '../config/config';
 
 
 export async function useNamespaceKubernetes(kubectl: Kubectl, explorerNode: ClusterExplorerNode, options: { preferPick: boolean }) {
@@ -17,12 +18,14 @@ export async function useNamespaceKubernetes(kubectl: Kubectl, explorerNode: Clu
         }
     }
 
+    const isMinimalWorkflow = config.isMinimalWorkflow();
     const currentNS = await kubectlUtils.currentNamespace(kubectl);
     const resourceKind = [kuberesources.allKinds.namespace];
     const interactiveOptions = {
         prompt: 'What namespace do you want to use?',
         placeHolder: 'Enter the namespace to switch to or press enter to select from available list',
-        filterNames: [currentNS]
+        filterNames: [currentNS],
+        skipFreeTextPrompt: isMinimalWorkflow
     };
     const kindName = options.preferPick ? await quickPickKindName(resourceKind, interactiveOptions) : await promptKindName(
         resourceKind,
