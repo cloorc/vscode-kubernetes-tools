@@ -297,14 +297,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<APIBro
         registerCommand('kubernetes.minioExplorer.getContent', (node: minio.MinioObject) => minio.getContent(node)),
 
         // Commands - GitLab
-        registerCommand('kubernetes.gitlabExplorer.refresh', (node: gitlab.GitLabObject) => gitlabExplorer.refresh(node)),
+        registerCommand('kubernetes.gitlabExplorer.refresh', (node: gitlab.GitObject) => gitlabExplorer.refresh(node)),
         registerCommand('kubernetes.gitlabExplorer.addExistingRepository', () => gitlab.addExistingGitLabRepository(gitlabExplorer, context)),
-        registerCommand('kubernetes.gitlabExplorer.createMergeRequest', (node: gitlab.GitLabObject) => node.createMergeRequest()),
+        registerCommand('kubernetes.gitlabExplorer.createMergeRequest', (node: gitlab.GitObject) => node.createMergeRequest()),
         registerCommand('kubernetes.gitlabExplorer.removeRepository', () => gitlabExplorer.removeClusters()),
-        registerCommand('kubernetes.gitlabExplorer.getContent', (node: gitlab.GitLabObject) => gitlab.getContent(node)),
+        registerCommand('kubernetes.gitlabExplorer.getContent', (node: gitlab.GitObject) => gitlab.getContent(node)),
         registerCommand('kubernetes.gitlabExplorer.submitContent', () => gitlabExplorer.submitContentToRepository()),
-        registerCommand('kubernetes.gitlabExplorer.copyPath', (node: gitlab.GitLabObject) => node.copyPath()),
-        registerCommand('kubernetes.gitlabExplorer.copyName', (node: gitlab.GitLabObject) => node.copyName()),
+        registerCommand('kubernetes.gitlabExplorer.copyPath', (node: gitlab.GitObject) => node.copyPath()),
+        registerCommand('kubernetes.gitlabExplorer.copyName', (node: gitlab.GitObject) => node.copyName()),
 
         // Commands - Home
         registerCommand('kubernetes.homeExplorer.refresh', (node: fe.FileObject) => homeExplorer.refresh(node)),

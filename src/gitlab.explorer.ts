@@ -6,6 +6,7 @@ import { Gitlab } from '@gitbeaker/node';
 import { kubernetes } from "./logger";
 import { AbstractCluster, AbstractClusterExplorer, AbstractObject } from "./abstractcluster";
 import * as clipboard from './components/platform/clipboard';
+import axios from "axios";
 
 export const GITLAB_STATE = "ms-kubernetes-tools.vscode-kubernetes-tools.gitlab-explorer";
 
@@ -14,18 +15,143 @@ export interface Repository extends BaseResourceOptions<boolean> {
     token: string | undefined;
 };
 
-export class GitLabObject implements AbstractObject<GitLabObject> {
+export interface GitOperator {
+    defaultBranch(repo: string): Promise<string>;
+    branches(repo: string): Promise<string[]>;
+    tree(repo: string, branch: string, path: string): Promise<{ name: string; type: string; path: string }[]>;
+    raw(repo: string, path: string, ref: string): Promise<any>;
+    members(repo: string): Promise<{ username: string; id: any }[]>;
+    merge(repo: string, source: string, target: string, title: string, assignee: any): Promise<{ id: any }>;
+    upload(repo: string, path: string, branch: string, content: string, message: string): Promise<any>;
+}
+
+class GitLabOperator implements GitOperator {
+    constructor(private git: Resources.Gitlab) { }
+    upload(repo: string, path: string, branch: string, content: string, message: string): Promise<any> {
+        return new Promise((resolve, reject) => {
+            this.raw(repo, path, branch)
+                .then(() => { this.git.RepositoryFiles.edit(repo, path, branch, content, message, { encoding: 'base64' }).then(resolve).catch(reject); })
+                .catch(() => { this.git.RepositoryFiles.create(repo, path, branch, content, message, { encoding: 'base64' }).then(resolve).catch(reject); });
+        });
+    }
+
+    merge(repo: string, source: string, target: string, title: string, assignee: any): Promise<{ id: any }> {
+        return this.git!.MergeRequests.create(repo, source, target, title, { assigneeId: assignee });
+    }
+
+    members(repo: string): Promise<{ username: string; id: any }[]> {
+        return new Promise((resolve, reject) => {
+            this.git.ProjectMembers.all(repo).then(resolve).catch(reject);
+        });
+    }
+    raw(repo: string, path: string, ref: string): Promise<any> {
+        return new Promise((resolve, reject) => {
+            this.git.RepositoryFiles.showRaw(repo, path, { ref }).then(resolve).catch(reject);
+        });
+    }
+
+    tree(repo: string, _: string, path: string): Promise<{ name: string; type: string; path: string }[]> {
+        return new Promise((resolve, reject) => {
+            this.git.Repositories.tree(repo, { path: path, perPage: 1000 }).then(resolve).catch(reject);
+        });
+    }
+
+    defaultBranch(repo: string): Promise<string> {
+        return new Promise((resolve, reject) => {
+            this.git.Projects.show(repo)
+                .then((project) => resolve(project.default_branch || 'master'))
+                .catch(reject);
+        });
+    }
+    branches(repo: string): Promise<string[]> {
+        return new Promise((resolve, reject) => {
+            this.git.Branches.all(repo)
+                .then((branches) => resolve(branches.map((b) => b.name)))
+                .catch(reject);
+        });
+    }
+}
+
+class GiteeOperator implements GitOperator {
+    constructor(private token: string) { }
+
+    upload(repo: string, path: string, branch: string, content: string, message: string): Promise<any> {
+        return new Promise((resolve, reject) => {
+            axios.get(`https://gitee.com/api/v5/repos/${repo}/contents/${encodeURIComponent(path)}?access_token=${this.token}&ref=${branch}`)
+                .then((info) => {
+                    if (info.data.sha) {
+                        axios.put(`https://gitee.com/api/v5/repos/${repo}/contents/${encodeURIComponent(path)}`,
+                            // eslint-disable-next-line quote-props
+                            { 'access_token': this.token, content, message, sha: info.data.sha })
+                            .then(resolve).catch(reject);
+                    } else {
+                        axios.post(`https://gitee.com/api/v5/repos/${repo}/contents/${encodeURIComponent(path)}`,
+                            // eslint-disable-next-line quote-props
+                            { 'access_token': this.token, content, message, branch })
+                            .then(resolve).catch(reject);
+                    }
+                })
+        });
+    }
+
+    defaultBranch(repo: string): Promise<string> {
+        return new Promise((resolve, reject) => {
+            axios.get(`https://gitee.com/api/v5/repos/${repo}?access_token=${this.token}`)
+                .then((res) => resolve(res.data.default_branch))
+                .catch(reject);
+        });
+    }
+    branches(repo: string): Promise<string[]> {
+        return new Promise((resolve, reject) => {
+            axios.get(`https://gitee.com/api/v5/repos/${repo}/branches?access_token=${this.token}`)
+                .then((res) => resolve(res.data.map((b: any) => b.name)))
+                .catch(reject);
+        });
+    }
+    tree(repo: string, branch: string, path: string): Promise<{ name: string; type: string; path: string }[]> {
+        path = path.startsWith('/') ? path.substring(1) : path;
+        return new Promise((resolve, reject) => {
+            axios.get(`https://gitee.com/api/v5/repos/${repo}/git/trees/${branch}?access_token=${this.token}&recursive=1`)
+                .then((res) => resolve(res.data.tree.map((b: any) => {
+                    b.name = b.path.substring(b.path.lastIndexOf("/") + 1);
+                    return b;
+                }).filter((f: any) => {
+                    return f.path !== path && f.path.startsWith(path) && f.path.substring(path.length + 1).indexOf("/") < 0;
+                })))
+                .catch(reject);
+        });
+    }
+    raw(repo: string, path: string, ref: string): Promise<any> {
+        return new Promise((resolve, reject) => {
+            axios.get(`https://gitee.com/api/v5/repos/${repo}/contents/${encodeURIComponent(path)}?access_token=${this.token}&ref=${ref}`)
+                .then((res) => resolve(Buffer.from(res.data.content, 'base64').toString()))
+                .catch(reject);
+        });
+    }
+    members(repo: string): Promise<{ username: string; id: any }[]> {
+        return new Promise((resolve, reject) => {
+            axios.get(`https://gitee.com/api/v5/repos/${repo}/collaborators?access_token=${this.token}&page=1&per_page=100`)
+                .then((res) => resolve(res.data))
+                .catch(reject);
+        });
+    }
+    merge(_repo: string, _source: string, _target: string, _title: string, _assignee: any): Promise<{ id: any }> {
+        throw new Error("Method not implemented.");
+    }
+}
+
+export class GitObject implements AbstractObject<GitObject> {
     readonly name: string;
     readonly path: string;
     options: string | undefined;
-    gitlab: Resources.Gitlab | undefined;
+    git: GitOperator | undefined;
     file: boolean = false;
     repo: string;
     branch: string;
     readonly token: string | undefined;
     constructor(name: string, repo: string, path: string, file: boolean,
         branch: string, token: string | undefined, options: string | undefined,
-        gitlab: Resources.Gitlab | undefined) {
+        gitlab: GitOperator | undefined) {
         if (!options && !gitlab) {
             throw new Error(`Options or gitlab should be provided at least one.`);
         }
@@ -36,18 +162,20 @@ export class GitLabObject implements AbstractObject<GitLabObject> {
         this.options = options;
         this.branch = branch;
         this.token = token;
-        this.gitlab = gitlab;
-        if (this.options && !this.gitlab) {
-            this.gitlab = new Gitlab(JSON.parse(this.options));
+        this.git = gitlab;
+        if (this.options && !this.git) {
+            const opts = JSON.parse(this.options);
+            this.git = 'https://gitee.com' === opts.host ? new GiteeOperator(this.token!) :
+                new GitLabOperator(new Gitlab(opts));
         }
     }
-    async getChildren(): Promise<GitLabObject[]> {
+    async getChildren(): Promise<GitObject[]> {
         if (this.file) {
             return [];
         }
-        const files = await this.gitlab!.Repositories.tree(this.repo, { path: this.path, perPage: 1000 });
-        return files.map((f) => new GitLabObject(f.name, this.repo, f.path, 'blob' === f.type,
-            this.branch, this.token, this.options, this.gitlab));
+        const files = await this.git!.tree(this.repo, this.branch, this.path);
+        return files.map((f) => new GitObject(f.name, this.repo, f.path, 'blob' === f.type,
+            this.branch, this.token, this.options, this.git));
     }
     getTreeItem(): vscode.TreeItem {
         const item = this.file ? new vscode.TreeItem(this.name, vscode.TreeItemCollapsibleState.None) :
@@ -80,16 +208,16 @@ export class GitLabObject implements AbstractObject<GitLabObject> {
     }
 
     async createMergeRequest(): Promise<void> {
-        const branches = await this.gitlab!.Branches.all(this.repo, { perPage: 255 });
-        const sourceBranch = await vscode.window.showQuickPick(branches.map((b) => b.name), { title: `Please specify the source branch:`, placeHolder: this.branch, canPickMany: false });
-        const targetBranch = await vscode.window.showQuickPick(branches.map((b) => b.name), { title: `Please specify the target branch:`, canPickMany: false });
+        const branches = await this.git!.branches(this.repo);
+        const sourceBranch = await vscode.window.showQuickPick(branches, { title: `Please specify the source branch:`, placeHolder: this.branch, canPickMany: false });
+        const targetBranch = await vscode.window.showQuickPick(branches, { title: `Please specify the target branch:`, canPickMany: false });
         if (sourceBranch && targetBranch) {
-            const assignees = await this.gitlab!.ProjectMembers.all(this.repo, { perPage: 255, includeInherited: true });
+            const assignees = await this.git!.members(this.repo);
             const username = await vscode.window.showQuickPick(assignees.map((a) => a.username), { title: `Please specify the assignee:` });
             const assignee = assignees.filter((a) => a.username === username)[0];
             if (assignee) {
-                this.gitlab!.MergeRequests.create(this.repo, sourceBranch, targetBranch,
-                    `New merge request from Visual Studio Code - Kubernetes`, { assigneeId: assignee.id }).then((res) => {
+                this.git!.merge(this.repo, sourceBranch, targetBranch,
+                    `New merge request from Visual Studio Code - Kubernetes`, assignee).then((res) => {
                         vscode.window.showInformationMessage(`Merge request created successfully: ${res.id}`);
                     }).catch((err) => {
                         vscode.window.showWarningMessage(`Unable to create merge request: ${err}`);
@@ -103,7 +231,7 @@ export class GitLabObject implements AbstractObject<GitLabObject> {
     }
 }
 
-export class GitLabExplorer extends AbstractClusterExplorer<GitLabObject> {
+export class GitExplorer extends AbstractClusterExplorer<GitObject> {
     protected name(cluster: AbstractCluster): string {
         return (cluster as Repository).host.match(/https?:\/\/[^\/]+\/(.*)/)![1];
     }
@@ -114,24 +242,25 @@ export class GitLabExplorer extends AbstractClusterExplorer<GitLabObject> {
         this.context = context;
     }
 
-    protected async getClusters(): Promise<GitLabObject[]> {
+    protected async getClusters(): Promise<GitObject[]> {
         const rawClusters: string = this.context.globalState.get(GITLAB_STATE) || "[]";
         const clusters: Repository[] = JSON.parse(rawClusters);
-        const validClusters: GitLabObject[] = [];
+        const validClusters: GitObject[] = [];
         for (const cluster of clusters) {
             const options = cluster || {};
             try {
                 const uri = vscode.Uri.parse(options.host);
                 const repo = uri.path.substring(1);
                 const host = `${uri.scheme}://${uri.authority}`;
-                const client = new Gitlab({
-                    ...options,
-                    host,
-                    version: 4
-                });
-                const project = await client.Projects.show(repo);
-                validClusters.push(new GitLabObject(cluster.host.substring(host.length + 1), repo, "/",
-                    false, project.default_branch || "master", undefined, undefined, client));
+                const client = uri.authority === 'gitee.com' ? new GiteeOperator(options.token!) :
+                    new GitLabOperator(new Gitlab({
+                        ...options,
+                        host,
+                        version: 4
+                    }));
+                const branch = await client.defaultBranch(repo);
+                validClusters.push(new GitObject(cluster.host.substring(host.length + 1), repo, "/",
+                    false, branch || "master", undefined, undefined, client));
             } catch (err) {
                 kubernetes.log(`Skip invalid cluster: ${JSON.stringify(cluster)}(${JSON.stringify(err)})`);
             }
@@ -154,34 +283,24 @@ export class GitLabExplorer extends AbstractClusterExplorer<GitLabObject> {
                 const content = Buffer.from(await vscode.window.activeTextEditor?.document.getText() || "").toString("base64");
                 const uri = vscode.Uri.parse(cluster.host);
                 const repo = uri.path.substring(1);
-                const client = new Gitlab({
+                const client = uri.authority === 'gitee.com' ? new GiteeOperator(cluster.token!) : new GitLabOperator(new Gitlab({
                     ...cluster,
                     host: `${uri.scheme}://${uri.authority}`,
                     version: 4
-                });
-                const project = await client.Projects.show(repo);
-                const branches = await client!.Branches.all(repo, { perPage: 255 });
-                const branch = await vscode.window.showQuickPick(branches.map((b) => b.name), {
-                    title: `Please specify the target branch:`, placeHolder: project.default_branch || "master", canPickMany: false
+                }));
+                const defaultBranch = await client.defaultBranch(repo);
+                const branches = await client!.branches(repo);
+                const branch = await vscode.window.showQuickPick(branches, {
+                    title: `Please specify the target branch:`, placeHolder: defaultBranch || "master", canPickMany: false
                 });
                 if (branch) {
-                    client.RepositoryFiles.show(repo, path, branch, undefined).then((_) => {
-                        client.RepositoryFiles.edit(repo, path, branch, content, "Submit from kubernetes gitlab explorer",
-                            { encoding: "base64" }).then(() => {
-                                vscode.window.showInformationMessage(`Kubectl GitLab: content has been committed successfully.`);
-                            }).catch((err) => {
-                                vscode.window.showInformationMessage(`Kubectl GitLab: content hasn't been committed ${err}`);
-                            });
-                    }).catch((_) => {
-                        client.RepositoryFiles.create(repo, path, branch, content, "Submit from kubernetes gitlab explorer",
-                            { encoding: "base64" }).then(() => {
-                                vscode.window.showInformationMessage(`Kubectl GitLab: content has been committed successfully.`);
-                            }).catch((err) => {
-                                vscode.window.showInformationMessage(`Kubectl GitLab: content hasn't been committed ${err}`);
-                            });
+                    client.upload(repo, path, branch, content, "Submit from kubernetes gitlab explorer").then(() => {
+                        vscode.window.showInformationMessage(`Kubectl GitLab: content has been committed successfully.`);
+                    }).catch((err) => {
+                        vscode.window.showInformationMessage(`Kubectl GitLab: content hasn't been committed ${err}`);
                     });
                 } else {
-                    vscode.window.showInformationMessage(`Kubectl: invalid target branch ${branch}.`);;
+                    vscode.window.showInformationMessage(`Kubectl: invalid target branch ${branch}.`);
                 }
             }
         } else {
@@ -190,7 +309,7 @@ export class GitLabExplorer extends AbstractClusterExplorer<GitLabObject> {
     }
 }
 
-export async function addExistingGitLabRepository(etcdExplorer: GitLabExplorer, context: vscode.ExtensionContext) {
+export async function addExistingGitLabRepository(etcdExplorer: GitExplorer, context: vscode.ExtensionContext) {
     const endpoint = await vscode.window.showInputBox({
         prompt: `Please specify the URL of GitLab repository:`,
         placeHolder: `https://gitlab.com/group/repository`
@@ -221,14 +340,14 @@ export async function addExistingGitLabRepository(etcdExplorer: GitLabExplorer, 
     etcdExplorer.refresh();
 }
 
-export function create(host: Host, context: vscode.ExtensionContext): GitLabExplorer {
-    return new GitLabExplorer(host, context);
+export function create(host: Host, context: vscode.ExtensionContext): GitExplorer {
+    return new GitExplorer(host, context);
 }
 
-export async function getContent(node: GitLabObject): Promise<void> {
+export async function getContent(node: GitObject): Promise<void> {
     try {
-        if (node.gitlab) {
-            const value = await node.gitlab.RepositoryFiles.showRaw(node.repo, node.path);
+        if (node.git) {
+            const value = await node.git.raw(node.repo, node.path, node.branch);
             if (value) {
                 let language = "plaintext";
                 const extension = (node.path.match(/.*\.([^.]+)/) || [])[1];
