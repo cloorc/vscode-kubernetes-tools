@@ -835,7 +835,7 @@ function loadKubernetesCore(namespace: string | null, value: string) {
 
 async function exposeKubernetes() {
     const isMinimalWorkflow = config.isMinimalWorkflow();
-    const kindName = await findKindNameOrPrompt(kuberesources.exposableKinds, 'expose', { nameOptional: false, skipFreeTextPrompt: isMinimalWorkflow});
+    const kindName = await findKindNameOrPrompt(kuberesources.exposableKinds, 'expose', { nameOptional: false, skipFreeTextPrompt: isMinimalWorkflow });
     if (!kindName) {
         return;
     }
@@ -1298,7 +1298,7 @@ export async function promptKindName(resourceKinds: kuberesources.ResourceKind[]
         skipFreeTextPrompt = opts.skipFreeTextPrompt || skipFreeTextPrompt;
     }
 
-    const resource = await vscode.window.showInputBox({ prompt, placeHolder});
+    const resource = await vscode.window.showInputBox({ prompt, placeHolder });
 
     if (resource === '') {
         return await quickPickKindName(resourceKinds, opts);
@@ -1549,7 +1549,7 @@ async function selectContainerForResource(resource: ContainerContainer): Promise
         return containers[0];
     }
 
-    const pickItems = containers.map((element) => {
+    const pickItems = containers.filter((i) => i.name.trim()).map((element) => {
         return {
             label: element.name,
             description: '',
@@ -1557,6 +1557,11 @@ async function selectContainerForResource(resource: ContainerContainer): Promise
             container: element
         };
     });
+
+    if (pickItems.length === 1) {
+        // treat as default, without any container specified
+        return null;
+    }
 
     const value = await vscode.window.showQuickPick(pickItems, { placeHolder: "Select container" });
 
@@ -1573,11 +1578,11 @@ async function getContainers(resource: ContainerContainer): Promise<Container[] 
 
     const initContainers = await getContainerQuery(resource, 'initContainers');
     if (initContainers) {
-        initContainers.map((s) => { containersEx.push(s)});
+        initContainers.map((s) => { containersEx.push(s); });
     }
     const containers = await getContainerQuery(resource, 'containers');
     if (containers) {
-        containers.map((s) => { containersEx.push(s)});
+        containers.map((s) => { containersEx.push(s); });
     }
     if (containersEx.length) {
         return containersEx;
@@ -1602,7 +1607,7 @@ async function getContainerQuery(resource: ContainerContainer, containerType: st
     }
     const containersEx = c.result.map((s) => {
         const bits = s.split('\t');
-        return { name: bits[0], image: bits[1], initContainer: containerType === 'initContainers'};
+        return { name: bits[0], image: bits[1], initContainer: containerType === 'initContainers' };
     });
     return containersEx;
 }
@@ -1630,10 +1635,12 @@ async function terminalKubernetes(explorerNode?: ClusterExplorerResourceNode) {
         const namespace = explorerNode.namespace;
         const podSummary = { name: explorerNode.name, namespace: namespace || undefined };  // TODO: rationalise null and undefined
         const container = await selectContainerForPod(podSummary);
+        // For those images (e.g. built from Busybox) where bash may not be installed by default, use sh instead.
+        const suggestedShell = await suggestedShellForContainer(kubectl, podSummary.name, podSummary.namespace, container?.name);
         if (container) {
-            // For those images (e.g. built from Busybox) where bash may not be installed by default, use sh instead.
-            const suggestedShell = await suggestedShellForContainer(kubectl, podSummary.name, podSummary.namespace, container.name);
             execTerminalOnContainer(podSummary.name, podSummary.namespace, container.name, suggestedShell);
+        } else {
+            execTerminalOnContainer(podSummary.name, podSummary.namespace, undefined, suggestedShell);
         }
     } else {
         execKubernetesCore(true);

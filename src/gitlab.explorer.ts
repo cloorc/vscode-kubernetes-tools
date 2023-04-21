@@ -90,7 +90,7 @@ class GiteeOperator implements GitOperator {
                             { 'access_token': this.token, content, message, branch })
                             .then(resolve).catch(reject);
                     }
-                })
+                });
         });
     }
 
