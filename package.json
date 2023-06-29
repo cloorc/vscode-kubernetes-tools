@@ -1,9 +1,9 @@
 {
-    "name": "vscode-kubernetes-tools",
+    "name": "kubernetes-tools",
     "displayName": "Kubernetes",
     "description": "Develop, deploy and debug Kubernetes applications",
     "version": "1.3.13",
-    "publisher": "ms-kubernetes-tools",
+    "publisher": "cloorc",
     "engines": {
         "vscode": "^1.52.0"
     },
