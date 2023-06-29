@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.3.14]
+
+* Add new features from upgrade branch
+
+Contributors: cloorc
+
 ## [1.3.13]
 
 * Trim container name and filter empty ones.
