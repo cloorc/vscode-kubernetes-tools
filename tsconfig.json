@@ -3,7 +3,7 @@
         "module": "commonjs",
         "target": "ES2021",
         "outDir": "out",
-        "moduleResolution": "node",
+        "moduleResolution": "NodeNext",
         "lib": [
             "ES2021"
         ],
@@ -19,11 +19,20 @@
         "strictNullChecks": true,
         "noImplicitThis": true,
         "strict": true,
-        "forceConsistentCasingInFileNames": true
+        "forceConsistentCasingInFileNames": true,
+        "skipDefaultLibCheck": true,
+        "skipLibCheck": true,
     },
+    "include": [
+        ".eslintrc.js",
+        "src"
+    ],
     "exclude": [
+        "./node_modules",
+        "./node_modules/*",
+        "./node_modules/@types/node/index.d.ts",
         "node_modules",
         ".vscode-test",
-        "docs"
+        "docs",
     ]
 }

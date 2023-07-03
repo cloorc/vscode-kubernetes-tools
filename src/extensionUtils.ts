@@ -21,7 +21,7 @@ export async function installVscodeExtension(extensionId: string): Promise<boole
     return false;
 }
 
-export function isNonEmptyArray(value: any[]): boolean {
+export function isNonEmptyArray(value: any[] | null): boolean {
     if (value && value.length) {
         return true;
     }

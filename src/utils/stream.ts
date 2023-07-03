@@ -1,3 +1,4 @@
+import { BucketItem, BucketStream } from "minio";
 import { Readable } from "stream";
 
 export async function readToBuffer(is: Readable): Promise<Buffer> {
@@ -22,7 +23,7 @@ export async function readToBuffer(is: Readable): Promise<Buffer> {
     });
 }
 
-export async function readToList<T>(is: Readable): Promise<T[]> {
+export async function readToList<T>(is: BucketStream<BucketItem>): Promise<T[]> {
     if (undefined === is || null === is) {
         return Promise.resolve([]);
     }

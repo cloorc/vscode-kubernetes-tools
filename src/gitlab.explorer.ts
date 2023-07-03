@@ -6,7 +6,7 @@ import { Gitlab } from '@gitbeaker/node';
 import { kubernetes } from "./logger";
 import { AbstractCluster, AbstractClusterExplorer, AbstractObject } from "./abstractcluster";
 import * as clipboard from './components/platform/clipboard';
-import axios from "axios";
+import * as axios from "axios";
 
 export const GITLAB_STATE = "ms-kubernetes-tools.vscode-kubernetes-tools.gitlab-explorer";
 

@@ -1,5 +1,37 @@
 # Change Log
 
+## [1.3.15]
+
+* Add multiple features for ease of use
+
+## [1.3.14]
+
+* Add new features from upgrade branch
+
+Contributors: cloorc
+
+## [1.3.13]
+
+* Trim container name and filter empty ones.
+
+Contributors: lstocchi
+
+## [1.3.12]
+
+* Debug attach not working with go app
+* Detect errors in yaml file before actually parse it with node-yaml-parser lib
+* Retrieve tool paths outside kubernetes object and update README
+* Handle predefined vscode variables in extension setting
+* Add setting to suppress helm not found warning
+* Handle ANSI color codes in log webview
+* Fix/cluster tree label issue
+* Migrate from k8s.gcr.io to registry.k8s.io
+* Added notReady and completed pod status
+* Add inline buttons for describe, logs, and terminal
+* Fix logs webview jumps back when scrolling up (#1113)
+
+Contributors: lstocchi, jamesorlakin, carljmosca, shikharcodes, Tatsinnit
+
 ## [1.3.11]
 
 * Cache minikube show information responce

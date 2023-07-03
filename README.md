@@ -1,5 +1,5 @@
 # Visual Studio Code Kubernetes Tools
-[![Build Status](https://travis-ci.org/Azure/vscode-kubernetes-tools.svg?branch=master)](https://travis-ci.org/Azure/vscode-kubernetes-tools)
+[![Build Status](https://github.com/cloorc/vscode-kubernetes-tools/actions/workflows/build-dev.yml/badge.svg)](https://github.com/cloorc/vscode-kubernetes-tools/actions/workflows/build-dev.yml)
 
 The extension for developers building applications to run in Kubernetes clusters
 and for DevOps staff troubleshooting Kubernetes applications.
@@ -184,11 +184,13 @@ Minikube tools to be installed and available on your PATH.
 
 ## Extension Settings
 
+  The Kubernetes extension enables variable substitution for settings that require a path as a value. Variable substitution can be done using the `${variableName}` syntax. You can find a list of the variables supported in the [variables-reference](https://code.visualstudio.com/docs/editor/variables-reference) documentation.
+
    * `vs-kubernetes` - Parent for Kubernetes-related extension settings
        * `vs-kubernetes.namespace` - The namespace to use for all commands
-       * `vs-kubernetes.kubectl-path` - File path to the kubectl binary. Note this is the binary file itself, not just the directory containing the file. On Windows, this must contain the `.exe` extension.
-       * `vs-kubernetes.helm-path` - File path to the helm binary. Note this is the binary file itself, not just the directory containing the file. On Windows, this must contain the `.exe` extension.
-       * `vs-kubernetes.minikube-path` - File path to the minikube binary. Note this is the binary file itself, not just the directory containing the file. On Windows, this must contain the `.exe` extension.
+       * `vs-kubernetes.kubectl-path` (*deprecated*) - File path to the kubectl binary. Note this is the binary file itself, not just the directory containing the file. On Windows, this must contain the `.exe` extension. This is deprecated, please use `vscode-kubernetes.kubectl-path` instead.
+       * `vs-kubernetes.helm-path` (*deprecated*) - File path to the helm binary. Note this is the binary file itself, not just the directory containing the file. On Windows, this must contain the `.exe` extension. This is deprecated, please use `vscode-kubernetes.helm-path` instead.
+       * `vs-kubernetes.minikube-path` (*deprecated*) - File path to the minikube binary. Note this is the binary file itself, not just the directory containing the file. On Windows, this must contain the `.exe` extension. This is deprecated, please use `vscode-kubernetes.minikube-path` instead.
        * `vs-kubernetes.kubectlVersioning` - By default, the extension uses the `kubectl` binary you provide on the system PATH or in the `vs-kubernetes.kubectl-path` configuration setting. If you set this setting to `infer`, then for each cluster the extension will attempt to identify the cluster version and download a compatible `kubectl` binary.  This improves compatibility if you have multiple Kubernetes versions in play, but may be slower.  **Note:** this setting is checked only when the extension loads; if you change it, you must reload the extension.
        * `vs-kubernetes.kubeconfig` - File path to the kubeconfig file you want to use. This overrides both the default kubeconfig and the KUBECONFIG environment variable.
        * `vs-kubernetes.knownKubeconfigs` - An array of file paths of kubeconfig files that you want to be able to quickly switch between using the Set Kubeconfig command.
@@ -199,6 +201,7 @@ Minikube tools to be installed and available on your PATH.
        * `vs-kubernetes.disable-context-info-status-bar` - Disable displaying your current Kubernetes context in VS Code's status bar. When active, it can be used to switch context from the status bar.
        * `vs-kubernetes.disable-namespace-info-status-bar` - Disable displaying your current Kubernetes namespace in VS Code's status bar. When active, it can be used to switch namespace from the status bar.
        * `vs-kubernetes.suppress-kubectl-not-found-alerts` - Turns off the warning (and installation prompt) if `kubectl` was not found. You should not normally set this, as most of the extension depends on `kubectl`, but it can be useful if working primarily with Helm.
+       * `vs-kubernetes.suppress-helm-not-found-alerts` - Turns off the warning (and installation prompt) if `helm` was not found.
        * `vs-kubernetes.ignore-recommendations` - Set to true to silence Kubernetes extension recommendation notifications.
        * `vs-kubernetes.minikube-show-information-expiration` - Set to valid expiration date for minikube install to show information dialog box to display.
        * `vs-kubernetes.enable-minimal-workflow` - Enables the minimal workflow for several actions (Get, Describe, Scale, Expose, Switch). By executing one of those commands the queries to the cluster are reduced at minimum and users are able to freely type the resource name to use.
@@ -206,6 +209,9 @@ Minikube tools to be installed and available on your PATH.
    * `checkForMinikubeUpgrade` - On extension startup, notify if a minikube upgrade is available. Defaults to true.
    * `disable-lint` - Disable all linting of Kubernetes files
    * `disable-linters` - Disable specific linters by name
+   * `vscode-kubernetes.kubectl-path` - File path to the kubectl binary. Note this is the binary file itself, not just the directory containing the file. On Windows, this must contain the `.exe` extension.
+   * `vscode-kubernetes.helm-path` - File path to the helm binary. Note this is the binary file itself, not just the directory containing the file. On Windows, this must contain the `.exe` extension.
+   * `vscode-kubernetes.minikube-path` - File path to the minikube binary. Note this is the binary file itself, not just the directory containing the file. On Windows, this must contain the `.exe` extension.
    * `vscode-kubernetes.log-viewer.follow` - Set to true to follow logs by default in the log viewer.
    * `vscode-kubernetes.log-viewer.timestamp` - Set to true to show timestamps by default in the log viewer.
    * `vscode-kubernetes.log-viewer.since` - How far back to fetch logs from in seconds by default. Set to -1 for all logs.
@@ -216,7 +222,7 @@ Minikube tools to be installed and available on your PATH.
 
 ## Custom tool locations
 
-For `kubectl` and `helm`, the binaries do not need to be on the system PATH. You can configure the extension by specifying the locations using the appropriate `vs-kubernetes -> vs-kubernetes.${tool}-path` configuration setting.  See [Extension Settings](#extension-settings) below.
+For `kubectl` and `helm`, the binaries do not need to be on the system PATH. You can configure the extension by specifying the locations using the appropriate `vscode-kubernetes.${tool}-path` configuration setting.  See [Extension Settings](#extension-settings) below.
 
 The extension can install `kubectl` and `helm` for you if they are missing - choose **Install dependencies** when you see an error notification for the missing tool.  This will set `kubectl-path` and `helm-path` entries in your configuration for the current OS (see "Portable extension configuration" below) - the programs will *not* be installed on the system PATH, but this will be sufficient for them to work with the extension.
 
@@ -226,18 +232,16 @@ If you are working with Azure Container Services or Azure Kubernetes Services, t
 
 If you move your configuration file between machines with different OSes (and therefore different paths to binaries) you can override the following settings on a per-OS basis by appending `.windows`, `.mac` or `.linux` to the setting name:
 
-  * `vs-kubernetes.kubectl-path`
-  * `vs-kubernetes.helm-path`
-  * `vs-kubernetes.minikube-path`
+  * `vscode-kubernetes.kubectl-path`
+  * `vscode-kubernetes.helm-path`
+  * `vscode-kubernetes.minikube-path`
 
 For example, consider the following settings file:
 
 ```json
 {
-  "vs-kubernetes": {
-    "vs-kubernetes.kubectl-path": "/home/foo/kubernetes/bin/kubectl",
-    "vs-kubernetes.kubectl-path.windows": "c:\\Users\\foo\\kubernetes\\bin\\kubectl.exe"
-  }
+  "vscode-kubernetes.kubectl-path": "/home/foo/kubernetes/bin/kubectl",
+  "vscode-kubernetes.kubectl-path-windows": "c:\\Users\\foo\\kubernetes\\bin\\kubectl.exe"
 }
 ```
 

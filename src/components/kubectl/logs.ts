@@ -40,7 +40,7 @@ export async function logsKubernetes(
  */
 export async function logsKubernetesWithLatest300RowsAndFollow(
     kubectl: Kubectl,
-    explorerNode: ClusterExplorerResourceNode
+    explorerNode?: ClusterExplorerResourceNode
 ) {
     const ns = explorerNode?.namespace || (await vscode.window.showQuickPick((await kubectlUtils.getNamespaces(kubectl)).map((e) => e.name), { canPickMany: false }));
     const name = explorerNode?.name || (await vscode.window.showQuickPick((await kubectlUtils.getPods(kubectl, {}, ns)).map((p) => p.name), { canPickMany: false }));

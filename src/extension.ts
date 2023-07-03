@@ -88,13 +88,14 @@ import { getCurrentContext } from './kubectlUtils';
 import { LocalTunnelDebugger } from './components/localtunneldebugger/localtunneldebugger';
 import { setAssetContext } from './assets';
 import { fixOldInstalledBinaryPermissions } from './components/installer/fixwriteablebinaries';
-import { HelmReleaseNode } from './components/clusterexplorer/node.helmrelease';
-import { ResourceNode } from './components/clusterexplorer/node.resource';
 import * as etcd from './etcdcluster';
 import * as minio from './miniocluster';
 import * as gitlab from './gitlab.explorer';
 import * as fe from './home.explorer';
 import YAML = require('js-yaml');
+import { interpolateVariables } from './utils/interpolation';
+import { HelmReleaseNode } from './components/clusterexplorer/node.helmrelease';
+import { ResourceNode } from './components/clusterexplorer/node.resource';
 
 let explainActive = false;
 let swaggerSpecPromise: Promise<explainer.SwaggerModel | undefined> | null = null;
@@ -1089,7 +1090,7 @@ function findNameAndImageInternal(fn: (name: string, image: string) => void) {
     const name = docker.sanitiseTag(folderName);
     findVersion().then((version) => {
         let image = `${name}:${version}`;
-        const user = vscode.workspace.getConfiguration().get("vsdocker.imageUser", null);
+        const user = interpolateVariables(vscode.workspace.getConfiguration().get("vsdocker.imageUser", undefined));
         if (user) {
             image = `${user}/${image}`;
         }
@@ -1174,7 +1175,7 @@ function runKubernetes() {
 
 function diagnosePushError(_exitCode: number, error: string): string {
     if (error.includes("denied")) {
-        const user = vscode.workspace.getConfiguration().get("vsdocker.imageUser", null);
+        const user = interpolateVariables(vscode.workspace.getConfiguration().get("vsdocker.imageUser", undefined));
         if (user) {
             return "Failed pushing the image to remote registry. Try to login to an image registry.";
         } else {
@@ -1607,9 +1608,10 @@ async function getContainerQuery(resource: ContainerContainer, containerType: st
     }
     const containersEx = c.result.map((s) => {
         const bits = s.split('\t');
-        return { name: bits[0], image: bits[1], initContainer: containerType === 'initContainers' };
+        return { name: bits[0] ? bits[0].trim() : '', image: bits[1] ? bits[1].trim() : '', initContainer: containerType === 'initContainers'};
     });
-    return containersEx;
+
+    return containersEx.filter(c => c.name !== '');
 }
 
 export async function getContainersForResource(resource: ContainerContainer): Promise<Container[] | null> {

@@ -9,7 +9,7 @@ import * as yl from './yaml-support/yaml-locator';
 
 export class KubernetesDocumentLink extends vscode.DocumentLink {
     range: vscode.Range;
-     target?: vscode.Uri;
+    target?: vscode.Uri;
     constructor(range: vscode.Range, target?: vscode.Uri) {
         super(range, target);
         this.range = range;
@@ -107,8 +107,8 @@ function siblings(node: yl.YamlMappingItem): yl.YamlMappingItem[] {
 
 function sibling(node: yl.YamlMappingItem, name: string): string | undefined {
     return siblings(node).filter((n) => n.key.raw === name)
-                         .map((n) => n.value.raw)
-                         [0];
+        .map((n) => n.value.raw)
+    [0];
 }
 
 function getLinkFromPair(document: vscode.TextDocument, sourceKind: string, node: yl.YamlMappingItem): vscode.DocumentLink | undefined {

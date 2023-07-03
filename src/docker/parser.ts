@@ -17,7 +17,7 @@ export interface IDockerfile {
     /**
      * Search the debug options from the launch command.
      */
-    searchLaunchArgs(regularExpression: RegExp): RegExpMatchArray;
+    searchLaunchArgs(regularExpression: RegExp): RegExpMatchArray | null;
 }
 
 export interface IDockerParser {
