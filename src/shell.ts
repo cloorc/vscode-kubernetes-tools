@@ -16,7 +16,7 @@ export enum Platform {
     Unsupported,  // shouldn't happen!
 }
 
-export interface ExecCallback extends shelljs.ExecCallback {}
+export interface ExecCallback extends shelljs.ExecCallback { }
 
 export interface Shell {
     isWindows(): boolean;
@@ -36,17 +36,17 @@ export interface Shell {
 }
 
 export const shell: Shell = {
-    isWindows : isWindows,
-    isUnix : isUnix,
-    platform : platform,
-    home : home,
-    combinePath : combinePath,
-    fileUri : fileUri,
-    execOpts : execOpts,
-    exec : exec,
+    isWindows: isWindows,
+    isUnix: isUnix,
+    platform: platform,
+    home: home,
+    combinePath: combinePath,
+    fileUri: fileUri,
+    execOpts: execOpts,
+    exec: exec,
     execStreaming: execStreaming,
-    execCore : execCore,
-    unquotedPath : unquotedPath,
+    execCore: execCore,
+    unquotedPath: unquotedPath,
     which: which,
     cat: cat,
     ls: ls,
@@ -126,7 +126,7 @@ function fileUri(filePath: string): vscode.Uri {
 function execOpts(): any {
     let env = process.env;
     if (isWindows()) {
-        env = Object.assign({ }, env, { HOME: home() });
+        env = Object.assign({}, env, { HOME: home() });
     }
     env = shellEnvironment(env);
     const opts = {
@@ -141,7 +141,7 @@ async function exec(cmd: string, stdin?: string): Promise<ShellResult | undefine
     try {
         return await execCore(cmd, execOpts(), null, stdin);
     } catch (ex) {
-        vscode.window.showErrorMessage(ex);
+        vscode.window.showErrorMessage(ex as string);
         return undefined;
     }
 }
@@ -150,7 +150,7 @@ async function execStreaming(cmd: string, callback: (proc: ChildProcess) => void
     try {
         return await execCore(cmd, execOpts(), callback);
     } catch (ex) {
-        vscode.window.showErrorMessage(ex);
+        vscode.window.showErrorMessage(ex as string);
         return undefined;
     }
 }
@@ -192,6 +192,10 @@ export function shellEnvironment(baseEnvironment: any): any {
 
     const kubeconfigPath = getKubeconfigPath();
     env['KUBECONFIG'] = kubeconfigPath.pathType === "host" ? kubeconfigPath.hostPath : kubeconfigPath.wslPath;
+    if (env["DEBUG"]) {
+        // FIXME no DEBUG on kubectl command
+        delete env["DEBUG"];
+    }
     return env;
 }
 

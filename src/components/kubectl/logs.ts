@@ -10,6 +10,9 @@ import { ContainerContainer } from '../../utils/containercontainer';
 import { ClusterExplorerResourceNode } from '../clusterexplorer/node';
 import { ExecResult } from '../../binutilplusplus';
 import { LogsDestination } from '../config/config';
+import * as path from 'path';
+import { createWriteStream, existsSync, unlinkSync } from 'fs';
+import { shell } from '../../shell';
 
 export enum LogsDisplayMode {
     Show,
@@ -29,6 +32,47 @@ export async function logsKubernetes(
     }
 
     return logsForPod(kubectl);
+}
+
+/**
+ * Fetches logs for a Pod. Handles use cases for fetching pods
+ * from an open document, or from the current namespace.
+ */
+export async function logsKubernetesWithLatest300RowsAndFollow(
+    kubectl: Kubectl,
+    explorerNode?: ClusterExplorerResourceNode
+) {
+    const ns = explorerNode?.namespace || (await vscode.window.showQuickPick((await kubectlUtils.getNamespaces(kubectl)).map((e) => e.name), { canPickMany: false }));
+    const name = explorerNode?.name || (await vscode.window.showQuickPick((await kubectlUtils.getPods(kubectl, {}, ns)).map((p) => p.name), { canPickMany: false }));
+    if (ns && name) {
+        kubectl.invokeInNewTerminal(`logs --tail=300 -f -n ${ns} ${name}`, `${ns}/${name}`);
+    }
+}
+
+export function logsKubernetesPreview(
+    kubectl: Kubectl,
+    explorerNode: ClusterExplorerResourceNode
+) {
+    const command = ["logs", "-n", explorerNode.namespace, explorerNode.name];
+    if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length <= 0) {
+        vscode.window.showWarningMessage(`At least one workspace should be opened to continue ... `);
+        return;
+    }
+    const logFile = path.join(vscode.workspace.workspaceFolders![0].uri.fsPath, `${explorerNode.name}.log`);
+    const logUri = shell.fileUri(logFile);
+    if (existsSync(logFile)) {
+        unlinkSync(logFile);
+        vscode.window.showInformationMessage(`Kubectl: removed an existing file ${logFile}!`);
+    }
+    kubectl.legacySpawnAsChild(command, { title: `Kubectl: fetching logs ${explorerNode.name} to ${logFile} ... ` }).then((proc) => {
+        if (proc) {
+            proc.stdout.pipe(createWriteStream(logFile));
+            proc.on('exit', () => {
+                vscode.workspace.openTextDocument(logUri).then((doc) => vscode.window.showTextDocument(doc));
+                vscode.window.showInformationMessage(`Kubectl: logs of ${explorerNode.name} successfully!`);
+            });
+        }
+    });
 }
 
 /**
@@ -181,7 +225,7 @@ async function logsForPod(kubectl: Kubectl): Promise<void> {
 async function logsForPodFromOpenDocument(kubectl: Kubectl, editor: vscode.TextEditor) {
     const text = editor.document.getText();
     try {
-        const obj: {} = yaml.safeLoad(text);
+        const obj: any = yaml.load(text);
         if (isPod(obj)) {
             // document describes a pod.
             const podSummary = {

@@ -96,8 +96,8 @@ export async function mergeToKubeconfig(newConfigText: string): Promise<void> {
     const kcfileExists = await fs.existsAsync(kcfile);
 
     const kubeconfigText = kcfileExists ? await fs.readTextFile(kcfile) : '';
-    const kubeconfig = yaml.safeLoad(kubeconfigText) || {};
-    const newConfig = yaml.safeLoad(newConfigText);
+    const kubeconfig: any = yaml.load(kubeconfigText) || {};
+    const newConfig: any = yaml.load(newConfigText);
 
     for (const section of ['clusters', 'contexts', 'users']) {
         const existing: Named[] | undefined = kubeconfig[section];
@@ -116,7 +116,7 @@ export async function mergeToKubeconfig(newConfigText: string): Promise<void> {
         kubeconfig['current-context'] = newConfig.contexts[0].name;
     }
 
-    const merged = yaml.safeDump(kubeconfig, { lineWidth: 1000000, noArrayIndent: true });
+    const merged = yaml.dump(kubeconfig, { lineWidth: 1000000, noArrayIndent: true });
 
     if (kcfileExists) {
         const backupFile = kcfile + '.vscode-k8s-tools-backup';

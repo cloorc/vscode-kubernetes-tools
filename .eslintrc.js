@@ -1,28 +1,28 @@
 module.exports = {
-    "env": {
-        "es6": true,
-        "node": true
+    env: {
+        es6: true,
+        node: true
     },
-    "parser": "@typescript-eslint/parser",
-    "parserOptions": {
-        "project": "tsconfig.json",
-        "sourceType": "module"
+    parser: "@typescript-eslint/parser",
+    parserOptions: {
+        project: true,
+        sourceType: "module"
     },
-    "plugins": [
+    plugins: [
         "@typescript-eslint",
         "@typescript-eslint/tslint"
     ],
-    "rules": {
+    rules: {
         "@typescript-eslint/member-delimiter-style": [
             "warn",
             {
-                "multiline": {
-                    "delimiter": "semi",
-                    "requireLast": true
+                multiline: {
+                    delimiter: "semi",
+                    requireLast: true
                 },
-                "singleline": {
-                    "delimiter": "semi",
-                    "requireLast": false
+                singleline: {
+                    delimiter: "semi",
+                    requireLast: false
                 }
             }
         ],
@@ -36,11 +36,11 @@ module.exports = {
             "warn",
             "always"
         ],
-        "camelcase": "error",
-        "curly": [
+        camelcase: "error",
+        curly: [
             "error"
         ],
-        "eqeqeq": [
+        eqeqeq: [
             "error",
             "always"
         ],
@@ -60,15 +60,15 @@ module.exports = {
         "@typescript-eslint/tslint/config": [
             "warn",
             {
-                "rules": {
-                    "encoding": true,
+                rules: {
+                    encoding: true,
                     "no-boolean-literal-compare": true,
                     "no-unused-variable": true,
                     "switch-final-break": [
                         true,
                         "always"
                     ],
-                    "whitespace": [
+                    whitespace: [
                         true,
                         "check-branch",
                         "check-decl",
@@ -84,5 +84,5 @@ module.exports = {
                 }
             }
         ]
-    }
+    },
 };

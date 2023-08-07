@@ -1,5 +1,37 @@
 # Change Log
 
+## [1.3.18]
+
+* Fix robustness for abnormal config for binary paths
+
+## [1.3.17]
+
+* Fix engine compatible version issue
+
+## [1.3.16]
+
+* Fix repository reference issue
+* Show pod status, pod details(IP address, age etc.) on pod name
+* Support node terminal
+* Helm upgrade from dropdown list releases
+* Get helm values for upgrading target release
+* Show chart name on helm release name
+* Quick log for specific pod
+* Local home folder view support
+* MinIO cluster view support
+* Etcd cluster view support
+* GitLab view support
+
+## [1.3.15]
+
+* Add multiple features for ease of use
+
+## [1.3.14]
+
+* Add new features from upgrade branch
+
+Contributors: cloorc
+
 ## [1.3.13]
 
 * Trim container name and filter empty ones.

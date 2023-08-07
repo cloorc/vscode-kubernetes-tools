@@ -22,8 +22,8 @@ interface KubernetesSchema {
 
 export class KubernetesClusterSchemaHolder {
     private definitions: { [key: string]: KubernetesSchema } = {};
-    private schemaEnums: { [key: string]: { [key: string]: [string[]] } };
-    private crdSchemas: { [key: string]: object | undefined};
+    private schemaEnums: { [key: string]: { [key: string]: [string[]] } } | undefined;
+    private crdSchemas: { [key: string]: object | undefined } | undefined;
 
     public static async fromActiveCluster(kubectl: Kubectl): Promise<KubernetesClusterSchemaHolder> {
         const holder = new KubernetesClusterSchemaHolder();
@@ -71,7 +71,7 @@ export class KubernetesClusterSchemaHolder {
                 "Always Disabled",
                 "Enable Once",
                 "Always Enabled"
-                );
+            );
             if (!action
                 || action === 'Disable Once') {
                 return false;
@@ -100,15 +100,15 @@ export class KubernetesClusterSchemaHolder {
             this.saveSchemaWithManifestStyleKeys(name, definitions[name]);
         }
 
-        for (const schema of _.values(this.definitions) ) {
+        for (const schema of _.values(this.definitions)) {
             if (kubectl &&
                 this.crdSchemas &&
                 schema.id &&
-                schema.id.toLowerCase() in this.crdSchemas)  {
-                    const crdProperties = this.crdSchemas[schema.id.toLowerCase()];
-                    if (crdProperties) {
-                        schema.properties = crdProperties;
-                    }
+                schema.id.toLowerCase() in this.crdSchemas) {
+                const crdProperties = this.crdSchemas[schema.id.toLowerCase()];
+                if (crdProperties) {
+                    schema.properties = crdProperties;
+                }
             }
             if (schema.properties) {
                 // the swagger schema has very short description on properties, we need to get the actual type of
@@ -155,7 +155,7 @@ export class KubernetesClusterSchemaHolder {
     private saveSchemaWithManifestStyleKeys(name: string, originalSchema: any): void {
         if (isGroupVersionKindStyle(originalSchema)) {
             // if the schema contains 'x-kubernetes-group-version-kind'. then it is a direct kubernetes manifest,
-            getManifestStyleSchemas(originalSchema).forEach((schema: KubernetesSchema) =>  {
+            getManifestStyleSchemas(originalSchema).forEach((schema: KubernetesSchema) => {
                 this.saveSchema({
                     ...schema,
                     name
@@ -186,28 +186,28 @@ export class KubernetesClusterSchemaHolder {
             return;
         }
         for (const key of Object.keys(node)) {
-            this.replaceDefinitionRefsWithYamlSchemaUris(node[key]);
+            this.replaceDefinitionRefsWithYamlSchemaUris((node as any)[key]);
         }
 
-        if (_.isString(node.$ref)) {
-            const name = getNameInDefinitions(node.$ref);
+        if (_.isString((node as { $ref: any }).$ref)) {
+            const name = getNameInDefinitions((node as { $ref: string }).$ref);
             const schema = this.lookup(name);
             if (schema) {
                 // replacing $ref
-                node.$ref = util.makeKubernetesUri(schema.name);
+                (node as { $ref: string | undefined }).$ref = util.makeKubernetesUri(schema.name);
             }
         }
     }
 
     // add enum field for pre-defined enums in schema-enums json file
     private loadEnumsForKubernetesSchema(node: KubernetesSchema) {
-        if (node.properties && this.schemaEnums[node.name]) {
+        if (node.properties && this.schemaEnums![node.name]) {
             _.each(node.properties, (propSchema, propKey) => {
-                if (this.schemaEnums[node.name][propKey]) {
+                if (this.schemaEnums![node.name][propKey]) {
                     if (propSchema.type === "array" && propSchema.items) {
-                        propSchema.items.enum = this.schemaEnums[node.name][propKey];
+                        propSchema.items.enum = this.schemaEnums![node.name][propKey];
                     } else {
-                        propSchema.enum = this.schemaEnums[node.name][propKey];
+                        propSchema.enum = this.schemaEnums![node.name][propKey];
                     }
                 }
             });
@@ -290,7 +290,7 @@ function getManifestStyleSchemas(originalSchema: any): KubernetesSchema[] {
 
 // convert '#/definitions/com.github.openshift.origin.pkg.build.apis.build.v1.ImageLabel' to
 // 'com.github.openshift.origin.pkg.build.apis.build.v1.ImageLabel'
-function getNameInDefinitions ($ref: string): string {
+function getNameInDefinitions($ref: string): string {
     const prefix = '#/definitions/';
     if ($ref.startsWith(prefix)) {
         return $ref.slice(prefix.length);

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as filepath from 'path';
 import * as exec from './helm.exec';
-import * as YAML from 'yamljs';
+import * as YAML from 'js-yaml';
 import * as fs from './wsl-fs';
 import { escape as htmlEscape } from 'lodash';
 import * as querystring from 'querystring';
@@ -168,7 +168,7 @@ export class HelmTemplatePreviewDocumentProvider implements vscode.TextDocumentC
 
     public update(uri: vscode.Uri) {
         this.onDidChangeEmitter.fire(uri);
-	}
+    }
 
     public provideTextDocumentContent(_uri: vscode.Uri, _token: vscode.CancellationToken): vscode.ProviderResult<string> {
         return new Promise<string>((resolve) => {
@@ -198,11 +198,11 @@ export class HelmTemplatePreviewDocumentProvider implements vscode.TextDocumentC
 
                         if (filepath.basename(reltpl) !== "NOTES.txt") {
                             try {
-                                YAML.parse(out);
+                                YAML.load(out);
                             } catch (e) {
                                 // TODO: Figure out the best way to display this message, but have it go away when the
                                 // file parses correctly.
-                                vscode.window.showErrorMessage(`YAML failed to parse: ${ e.message }`);
+                                vscode.window.showErrorMessage(`YAML failed to parse: ${(e as { message: string }).message}`);
                             }
                         }
 
@@ -237,9 +237,9 @@ export class HelmDependencyDocumentProvider implements vscode.TextDocumentConten
             return `<p>${dependencies.error[0]}</p>`;
         }
 
-        const list =  dependencies.result
-                                  .map(this.formatDependency)
-                                  .join('<br>');
+        const list = dependencies.result
+            .map(this.formatDependency)
+            .join('<br>');
         return `<p>${chartId} depends on:</p><ul>${list}</ul>`;
     }
 

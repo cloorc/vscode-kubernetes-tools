@@ -41,7 +41,7 @@ export class ContextNode extends ClusterExplorerNodeImpl implements ClusterExplo
         }
         return [];
     }
-    getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
+    getTreeItem(): vscode.TreeItem | Promise<vscode.TreeItem> {
         const treeItem = new vscode.TreeItem(this.contextName, vscode.TreeItemCollapsibleState.Collapsed);
         treeItem.contextValue = this.clusterType;
         treeItem.iconPath = this.icon;

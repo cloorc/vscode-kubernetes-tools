@@ -39,7 +39,7 @@ export class DotNetDebugProvider implements IDebugProvider {
             request: "attach",
             pipeTransport: {
                 pipeProgram: "kubectl",
-                pipeArgs: [ "exec", "-i", pod, "--", "/bin/sh", "-c" ],
+                pipeArgs: ["exec", "-i", pod, "--", "/bin/sh", "-c"],
                 debuggerPath: extensionConfig.getDotnetVsdbgPath(),
                 pipeCwd: workspaceFolder,
                 quoteArgs: true
@@ -52,14 +52,14 @@ export class DotNetDebugProvider implements IDebugProvider {
                 const sourceFileMap: JSON = JSON.parse(json);
                 debugConfiguration['sourceFileMap'] = sourceFileMap;
             } catch (error) {
-                kubeChannel.showOutput(error.message);
+                kubeChannel.showOutput((error as { message: string }).message);
             }
         }
         debugConfiguration.justMyCode = extensionConfig.getDebugJustMyCode();
         const currentFolder = (vscode.workspace.workspaceFolders || []).find((folder) => folder.name === path.basename(workspaceFolder));
         const result = await vscode.debug.startDebugging(currentFolder, debugConfiguration);
         if (!result) {
-           kubeChannel.showOutput(`${defaultDotnetDebuggerConfigType} debug attach failed for pod ${pod}.\nSee https://github.com/Azure/vscode-kubernetes-tools/blob/master/debug-on-kubernetes.md for troubleshooting.`, "Failed to attach");
+            kubeChannel.showOutput(`${defaultDotnetDebuggerConfigType} debug attach failed for pod ${pod}.\nSee https://github.com/Azure/vscode-kubernetes-tools/blob/master/debug-on-kubernetes.md for troubleshooting.`, "Failed to attach");
         }
         return result;
     }

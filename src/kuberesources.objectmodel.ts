@@ -62,6 +62,18 @@ export interface PodStatus {
 
 export interface ContainerStatus {
     readonly ready: boolean;
+    readonly state: {
+        readonly running: undefined | {
+            readonly startedAt: string;
+        };
+    };
+}
+
+export interface Secret extends KubernetesResource {
+    readonly type: string;
+    readonly data: {
+        release: string;
+    };
 }
 
 function isObjectMeta(obj: any): obj is ObjectMeta {

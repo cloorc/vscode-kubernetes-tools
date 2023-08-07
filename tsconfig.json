@@ -1,11 +1,11 @@
 {
     "compilerOptions": {
         "module": "commonjs",
-        "target": "es6",
+        "target": "ES2021",
         "outDir": "out",
-        "moduleResolution": "node",
+        "moduleResolution": "NodeNext",
         "lib": [
-            "es6"
+            "ES2021"
         ],
         "sourceMap": true,
         "rootDir": ".",
@@ -17,11 +17,18 @@
         "noImplicitAny": true,
         "strictFunctionTypes": true,
         "strictNullChecks": true,
-        "noImplicitThis": true
+        "noImplicitThis": true,
+        "strict": true,
+        "forceConsistentCasingInFileNames": true,
+        "skipDefaultLibCheck": true,
+        "skipLibCheck": true,
     },
     "exclude": [
+        "./node_modules",
+        "./node_modules/*",
+        "./node_modules/@types/node/index.d.ts",
         "node_modules",
         ".vscode-test",
-        "docs"
+        "docs",
     ]
 }

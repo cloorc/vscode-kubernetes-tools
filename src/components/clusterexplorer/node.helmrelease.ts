@@ -18,7 +18,7 @@ export class HelmHistoryNode extends ClusterExplorerNodeImpl implements ClusterE
         super(NODE_TYPES.helm.history);
     }
     readonly nodeType = NODE_TYPES.helm.history;
-    getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
+    getTreeItem(): vscode.TreeItem | Promise<vscode.TreeItem> {
         const updatedTime = moment(this.release.updated).fromNow();
         const treeItem = new vscode.TreeItem(`${this.release.revision}`, vscode.TreeItemCollapsibleState.None);
         treeItem.description = `${this.release.status} (${updatedTime})`;
@@ -40,7 +40,7 @@ export class HelmHistoryNode extends ClusterExplorerNodeImpl implements ClusterE
 }
 
 export class HelmReleaseNode extends ClusterExplorerNodeImpl implements ClusterExplorerHelmReleaseNode {
-    constructor(readonly releaseName: string, readonly status: string) {
+    constructor(readonly releaseName: string, readonly status: string, readonly chart: string) {
         super(NODE_TYPES.helm.release);
     }
     readonly nodeType = NODE_TYPES.helm.release;
@@ -54,8 +54,8 @@ export class HelmReleaseNode extends ClusterExplorerNodeImpl implements ClusterE
         }
         return history.result.map((r) => new HelmHistoryNode(this.releaseName, r));
     }
-    getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
-        const treeItem = new vscode.TreeItem(this.releaseName, vscode.TreeItemCollapsibleState.Collapsed);
+    getTreeItem(): vscode.TreeItem | Promise<vscode.TreeItem> {
+        const treeItem = new vscode.TreeItem(`${this.releaseName}(${this.chart})`, vscode.TreeItemCollapsibleState.Collapsed);
         treeItem.command = {
             command: "extension.helmGet",
             title: "Get",

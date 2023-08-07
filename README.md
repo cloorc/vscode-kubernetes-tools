@@ -1,5 +1,5 @@
 # Visual Studio Code Kubernetes Tools
-[![Build Status](https://travis-ci.org/Azure/vscode-kubernetes-tools.svg?branch=master)](https://travis-ci.org/Azure/vscode-kubernetes-tools)
+[![Build Status](https://github.com/cloorc/vscode-kubernetes-tools/actions/workflows/build-dev.yml/badge.svg)](https://github.com/cloorc/vscode-kubernetes-tools/actions/workflows/build-dev.yml)
 
 The extension for developers building applications to run in Kubernetes clusters
 and for DevOps staff troubleshooting Kubernetes applications.
@@ -313,7 +313,7 @@ If you are installing the extension from its VSIX, note that the machine will st
 
 ## GitHub Pages Website
 
-This project has a simple landing page website (visible at [vscode-kubernetes-tools.github.io/vscode-kubernetes-tools](https://vscode-kubernetes-tools.github.io/vscode-kubernetes-tools/)) which is [detailed here](https://github.com/vscode-kubernetes-tools/vscode-kubernetes-tools/tree/master/site).
+This project has a simple landing page website (visible at [vscode-kubernetes-tools.github.io/vscode-kubernetes-tools](https://vscode-kubernetes-tools.github.io/vscode-kubernetes-tools/)) which is [detailed here](https://github.com/cloorc/vscode-kubernetes-tools/tree/master/site).
 
 ## Contributing
 

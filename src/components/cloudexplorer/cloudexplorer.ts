@@ -10,7 +10,7 @@ export class CloudExplorer implements vscode.TreeDataProvider<CloudExplorerTreeN
     private onDidChangeTreeDataEmitter: vscode.EventEmitter<CloudExplorerTreeNode | undefined> = new vscode.EventEmitter<CloudExplorerTreeNode | undefined>();
     readonly onDidChangeTreeData: vscode.Event<CloudExplorerTreeNode | undefined> = this.onDidChangeTreeDataEmitter.event;
 
-    getTreeItem(element: CloudExplorerTreeNode): vscode.TreeItem | Thenable<vscode.TreeItem> {
+    getTreeItem(element: CloudExplorerTreeNode): vscode.TreeItem | Promise<vscode.TreeItem> {
         if (element.nodeType === 'cloud') {
             const treeItem = new vscode.TreeItem(element.provider.cloudName, vscode.TreeItemCollapsibleState.Collapsed);
             treeItem.contextValue = `kubernetes.cloudExplorer.cloud.${element.provider.cloudName}`;
@@ -23,7 +23,7 @@ export class CloudExplorer implements vscode.TreeDataProvider<CloudExplorerTreeN
             }
             return treeItem;
         }
-        return element.provider.treeDataProvider.getTreeItem(element.value);
+        return element.provider.treeDataProvider.getTreeItem(element.value) as Promise<vscode.TreeItem>;
     }
 
     getChildren(element?: CloudExplorerTreeNode | undefined): vscode.ProviderResult<CloudExplorerTreeNode[]> {

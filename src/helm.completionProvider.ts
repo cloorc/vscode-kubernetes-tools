@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { FuncMap } from './helm.funcmap';
 import * as logger from './logger';
-import * as YAML from 'yamljs';
+import * as YAML from 'js-yaml';
 import * as exec from './helm.exec';
 import * as path from 'path';
 import * as _ from 'lodash';
@@ -13,7 +13,7 @@ export class HelmTemplateCompletionProvider implements vscode.CompletionItemProv
     private funcmap = new FuncMap();
 
     private valuesCache: any;  // pulled in from YAML, no schema
-    private valuesWatcher: vscode.FileSystemWatcher;
+    private valuesWatcher: vscode.FileSystemWatcher | undefined;
 
     public constructor() {
         // The extension activates on things like 'Kubernetes tree visible',
@@ -45,7 +45,7 @@ export class HelmTemplateCompletionProvider implements vscode.CompletionItemProv
         try {
             this.valuesCache = YAML.load(valsYaml);
         } catch (err) {
-            logger.helm.log(err.message);
+            logger.helm.log((err as { message: string }).message);
             return;
         }
     }
@@ -84,7 +84,7 @@ export class HelmTemplateCompletionProvider implements vscode.CompletionItemProv
             }
             const keys = _.keys(this.valuesCache);
             const res = keys.map((key) =>
-                this.funcmap.v(key, ".Values."+key, "In values.yaml: " + this.valuesCache[key])
+                this.funcmap.v(key, ".Values." + key, "In values.yaml: " + this.valuesCache[key])
             );
             return res;
 
@@ -96,7 +96,7 @@ export class HelmTemplateCompletionProvider implements vscode.CompletionItemProv
             try {
                 reExecResult = this.valuesMatcher.exec(lineUntil);
             } catch (err) {
-                logger.helm.log(err.message);
+                logger.helm.log((err as { message: string }).message);
                 return [];
             }
 
@@ -105,7 +105,7 @@ export class HelmTemplateCompletionProvider implements vscode.CompletionItemProv
             if (!reExecResult || reExecResult.length === 0) {
                 return [];
             }
-            if (reExecResult[1].length === 0 ) {
+            if (reExecResult[1].length === 0) {
                 // This is probably impossible. It would match '.Values.', but that is
                 // matched by a previous condition.
                 return [];

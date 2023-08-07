@@ -7,8 +7,18 @@ import { kubefsUri } from './kuberesources.virtualfs';
 import { helmfsUri } from './helm.exec';
 import * as yl from './yaml-support/yaml-locator';
 
-export class KubernetesResourceLinkProvider implements vscode.DocumentLinkProvider {
-    provideDocumentLinks(document: vscode.TextDocument, _token: vscode.CancellationToken): vscode.ProviderResult<vscode.DocumentLink[]> {
+export class KubernetesDocumentLink extends vscode.DocumentLink {
+    range: vscode.Range;
+    target?: vscode.Uri;
+    constructor(range: vscode.Range, target?: vscode.Uri) {
+        super(range, target);
+        this.range = range;
+        this.target = target;
+    }
+}
+
+export class KubernetesResourceLinkProvider implements vscode.DocumentLinkProvider<KubernetesDocumentLink> {
+    provideDocumentLinks(document: vscode.TextDocument, _token: vscode.CancellationToken): vscode.ProviderResult<KubernetesDocumentLink[]> {
         const sourceKind = k8sKind(document);
         const yaml = yl.yamlLocator.getYamlDocuments(document);
         const leaves: yl.YamlNode[] = getLeafNodes(yaml);
@@ -25,7 +35,7 @@ function getLeafNodes(yaml: yl.YamlDocument[]): yl.YamlNode[] {
     return leafNodes;
 }
 
-function getLink(document: vscode.TextDocument, sourceKind: string, node: yl.YamlNode): vscode.DocumentLink | undefined {
+function getLink(document: vscode.TextDocument, sourceKind: string, node: yl.YamlNode): KubernetesDocumentLink | undefined {
     if (yl.isMappingItem(node)) {
         return getLinkFromPair(document, sourceKind, node);
     }
@@ -97,8 +107,8 @@ function siblings(node: yl.YamlMappingItem): yl.YamlMappingItem[] {
 
 function sibling(node: yl.YamlMappingItem, name: string): string | undefined {
     return siblings(node).filter((n) => n.key.raw === name)
-                         .map((n) => n.value.raw)
-                         [0];
+        .map((n) => n.value.raw)
+    [0];
 }
 
 function getLinkFromPair(document: vscode.TextDocument, sourceKind: string, node: yl.YamlMappingItem): vscode.DocumentLink | undefined {
@@ -106,7 +116,7 @@ function getLinkFromPair(document: vscode.TextDocument, sourceKind: string, node
     if (!uri) {
         return undefined;
     }
-    return new vscode.DocumentLink(range(document, node), uri);
+    return new KubernetesDocumentLink(range(document, node), uri);
 }
 
 function getLinkUri(sourceKind: string, node: yl.YamlMappingItem): vscode.Uri | undefined {

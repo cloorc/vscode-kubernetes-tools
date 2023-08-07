@@ -20,7 +20,7 @@ export abstract class NodeSourceImpl {
     at(parent: string | undefined): ExplorerExtender<ClusterExplorerNode> {
         return new ContributedNodeSourceExtender(parent, this);
     }
-    if(condition: () => boolean | Thenable<boolean>): NodeSourceImpl {
+    if(condition: () => boolean | Promise<boolean>): NodeSourceImpl {
         return new ConditionalNodeSource(this, condition);
     }
     abstract nodes(): Promise<ClusterExplorerNode[]>;
@@ -45,7 +45,7 @@ export class CustomGroupingFolderNodeSource extends NodeSourceImpl {
 }
 
 class ConditionalNodeSource extends NodeSourceImpl {
-    constructor(private readonly impl: NodeSourceImpl, private readonly condition: () => boolean | Thenable<boolean>) {
+    constructor(private readonly impl: NodeSourceImpl, private readonly condition: () => boolean | Promise<boolean>) {
         super();
     }
     async nodes(): Promise<ClusterExplorerNode[]> {
