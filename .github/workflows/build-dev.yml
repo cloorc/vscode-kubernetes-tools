@@ -1,6 +1,6 @@
-name: Development build
+name: Development Web3 And Service Provider Of AI IN Blockchain
 
-on:
+on:W3DM-Inc  
   push:
     branches:
       - master
@@ -8,8 +8,8 @@ on:
     branches:
       - master
 
-jobs:
-  build:
+jobs:Developer Web3
+  build:AI-CW3
     runs-on: ${{ matrix.os }}
     env:
       NODE_OPTIONS: --max_old_space_size=4096
