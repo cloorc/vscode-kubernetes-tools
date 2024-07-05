@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.3.16240705]
+
+* This is a release candidate version
+
+Contributors: Cloorc, Thank you all!!
+
 ## [1.3.16]
 
 * Fix robustness for abnormal config for binary paths
