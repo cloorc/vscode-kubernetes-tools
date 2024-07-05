@@ -124,7 +124,7 @@ async function minikubeUpgradeAvailable(context: Context): Promise<void> {
     try {
         versionInfo = await getVersionInfo(context);
     } catch (err) {
-        vscode.window.showErrorMessage(`Failed to determine minikube version: ${err}`);
+        vscode.window.showInformationMessage(`Failed to determine minikube version: ${err}`);
         return;
     }
 

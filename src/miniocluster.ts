@@ -45,7 +45,7 @@ export class MinioObject implements AbstractObject<MinioObject> {
                     readToList<Minio.BucketItem>(objects).then((items) => {
                         resolve(items.map((item) => {
                             const isFile = !item.prefix && item.name ? true : false;
-                            const path = isFile ? item.name : item.prefix;
+                            const path = isFile ? item.name! : item.prefix!;
                             return new MinioObject(path.substring(this.path.length), path, isFile, this.bucket, undefined, this.minio);
                         }));
                     });

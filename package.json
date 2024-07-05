@@ -1032,7 +1032,7 @@
                 },
                 {
                     "command": "extension.vsKubernetesUseNamespace",
-                    "when": ""
+                    "when": "true"
                 },
                 {
                     "command": "extension.vsKubernetesCopy",
@@ -1104,15 +1104,15 @@
                 },
                 {
                     "command": "kubernetes.cloudExplorer.mergeIntoKubeconfig",
-                    "when": ""
+                    "when": "true"
                 },
                 {
                     "command": "kubernetes.cloudExplorer.saveKubeconfig",
-                    "when": ""
+                    "when": "true"
                 },
                 {
                     "command": "kubernetes.portForwarding.showSessions",
-                    "when": ""
+                    "when": "true"
                 }
             ]
         },
@@ -1818,8 +1818,10 @@
         "redhat.vscode-yaml"
     ],
     "dependencies": {
-        "@gitbeaker/cli": "^35.8.1",
-        "@gitbeaker/node": "^35.8.1",
+        "@gitbeaker/cli": "^40",
+        "@gitbeaker/core": "^40",
+        "@gitbeaker/requester-utils": "^40",
+        "@gitbeaker/rest": "^40.0.3",
         "@kubernetes/client-node": "^0.20.0",
         "@vscode/debugadapter": "^1.57.0",
         "@vscode/debugprotocol": "^1.57.0",
@@ -1834,7 +1836,7 @@
         "debug": "^3.1.0",
         "docker-file-parser": "^1.0.7",
         "dockerfile-parse": "^0.2.0",
-        "download": "^8.0.0",
+        "download": "^3.3.0",
         "etcd3": "^1.1.0",
         "fflate": "^0.7.4",
         "fuzzysearch": "^1.0.3",

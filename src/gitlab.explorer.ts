@@ -1,18 +1,20 @@
 import * as vscode from "vscode";
 import { Host } from "./host";
-import { BaseResourceOptions } from '@gitbeaker/requester-utils';
-import { Resources } from '@gitbeaker/core';
-import { Gitlab } from '@gitbeaker/node';
+import { BaseRequestOptions } from '@gitbeaker/rest';
+import { Gitlab } from '@gitbeaker/core';
 import { kubernetes } from "./logger";
 import { AbstractCluster, AbstractClusterExplorer, AbstractObject } from "./abstractcluster";
 import * as clipboard from './components/platform/clipboard';
-import * as axios from "axios";
+import { Axios } from "axios";
+import { GitlabToken } from "@gitbeaker/requester-utils";
+
+const axios = new Axios();
 
 export const GITLAB_STATE = "ms-kubernetes-tools.vscode-kubernetes-tools.gitlab-explorer";
 
-export interface Repository extends BaseResourceOptions<boolean> {
+export interface Repository extends BaseRequestOptions<boolean> {
     host: string;
-    token: string | undefined;
+    token: GitlabToken;
 };
 
 export interface GitOperator {
@@ -26,7 +28,7 @@ export interface GitOperator {
 }
 
 class GitLabOperator implements GitOperator {
-    constructor(private git: Resources.Gitlab) { }
+    constructor(private git: Gitlab<boolean>) { }
     upload(repo: string, path: string, branch: string, content: string, message: string): Promise<any> {
         return new Promise((resolve, reject) => {
             this.raw(repo, path, branch)
@@ -46,20 +48,20 @@ class GitLabOperator implements GitOperator {
     }
     raw(repo: string, path: string, ref: string): Promise<any> {
         return new Promise((resolve, reject) => {
-            this.git.RepositoryFiles.showRaw(repo, path, { ref }).then(resolve).catch(reject);
+            this.git.RepositoryFiles.showRaw(repo, path, ref).then(resolve).catch(reject);
         });
     }
 
     tree(repo: string, _: string, path: string): Promise<{ name: string; type: string; path: string }[]> {
         return new Promise((resolve, reject) => {
-            this.git.Repositories.tree(repo, { path: path, perPage: 1000 }).then(resolve).catch(reject);
+            this.git.Repositories.allRepositoryTrees(repo, { path: path, perPage: 1000 }).then(resolve).catch(reject);
         });
     }
 
     defaultBranch(repo: string): Promise<string> {
         return new Promise((resolve, reject) => {
             this.git.Projects.show(repo)
-                .then((project) => resolve(project.default_branch || 'master'))
+                .then((project) => resolve(project.default_branch.toString() || 'master'))
                 .catch(reject);
         });
     }
@@ -252,11 +254,10 @@ export class GitExplorer extends AbstractClusterExplorer<GitObject> {
                 const uri = vscode.Uri.parse(options.host);
                 const repo = uri.path.substring(1);
                 const host = `${uri.scheme}://${uri.authority}`;
-                const client = uri.authority === 'gitee.com' ? new GiteeOperator(options.token!) :
+                const client = uri.authority === 'gitee.com' ? new GiteeOperator(options.token.toString()) :
                     new GitLabOperator(new Gitlab({
                         ...options,
                         host,
-                        version: 4
                     }));
                 const branch = await client.defaultBranch(repo);
                 validClusters.push(new GitObject(cluster.host.substring(host.length + 1), repo, "/",
@@ -283,10 +284,9 @@ export class GitExplorer extends AbstractClusterExplorer<GitObject> {
                 const content = Buffer.from(await vscode.window.activeTextEditor?.document.getText() || "").toString("base64");
                 const uri = vscode.Uri.parse(cluster.host);
                 const repo = uri.path.substring(1);
-                const client = uri.authority === 'gitee.com' ? new GiteeOperator(cluster.token!) : new GitLabOperator(new Gitlab({
+                const client = uri.authority === 'gitee.com' ? new GiteeOperator(cluster.token.toString()) : new GitLabOperator(new Gitlab({
                     ...cluster,
                     host: `${uri.scheme}://${uri.authority}`,
-                    version: 4
                 }));
                 const defaultBranch = await client.defaultBranch(repo);
                 const branches = await client!.branches(repo);
@@ -328,13 +328,13 @@ export async function addExistingGitLabRepository(etcdExplorer: GitExplorer, con
             continue;
         }
         if (cluster.host === endpoint) {
-            cluster.token = token;
+            cluster.token = token!;
             exists = true;
         }
         validClusters.push(cluster);
     }
     if (!exists) {
-        validClusters.push({ host: endpoint, token: token });
+        validClusters.push({ host: endpoint, token: token! });
     }
     context.globalState.update(GITLAB_STATE, JSON.stringify(validClusters));
     etcdExplorer.refresh();
