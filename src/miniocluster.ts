@@ -5,7 +5,7 @@ import { readToBuffer, readToList } from "./utils/stream";
 import { kubernetes } from "./logger";
 import { AbstractCluster, AbstractClusterExplorer, AbstractObject } from "./abstractcluster";
 
-export const MINIO_STATE = "ms-kubernetes-tools.vscode-kubernetes-tools.minio-explorer";
+export const MINIO_STATE = "kubernetes-tools.vscode-kubernetes-tools.minio-explorer";
 
 export type Cluster = Minio.ClientOptions & AbstractCluster;
 

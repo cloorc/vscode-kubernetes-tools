@@ -88,7 +88,7 @@ import { getCurrentContext } from './kubectlUtils';
 import { LocalTunnelDebugger } from './components/localtunneldebugger/localtunneldebugger';
 import { setAssetContext } from './assets';
 import { fixOldInstalledBinaryPermissions } from './components/installer/fixwriteablebinaries';
-import * as etcd from './etcdcluster';
+// import * as etcd from './etcdcluster';
 import * as minio from './miniocluster';
 import * as gitlab from './gitlab.explorer';
 import * as fe from './home.explorer';
@@ -159,7 +159,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<APIBro
     const dependenciesProvider = new HelmDependencyDocumentProvider();
     const helmSymbolProvider = new HelmDocumentSymbolProvider();
     const completionProvider = new HelmTemplateCompletionProvider();
-    const etcdExplorer = etcd.create(host, context);
+    // const etcdExplorer = etcd.create(host, context);
     const minioExplorer = minio.create(host, context);
     const gitlabExplorer = gitlab.create(host, context);
     const homeExplorer = fe.create(host, context);
@@ -283,13 +283,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<APIBro
         registerCommand('extension.helmConvertToTemplate', helmConvertToTemplate),
         registerCommand('extension.helmParameterise', helmParameterise),
         // Commands - ETCD
-        registerCommand('kubernetes.etcdExplorer.refresh', (node: etcd.EtcdObject) => etcdExplorer.refresh(node)),
-        registerCommand('kubernetes.etcdExplorer.addExistingClusters', () => etcd.addExistingEtcdCluster(etcdExplorer, context)),
-        registerCommand('kubernetes.etcdExplorer.removeClusters', () => etcdExplorer.removeClusters()),
-        registerCommand('kubernetes.etcdExplorer.getKeyValue', (node: etcd.EtcdObject) => etcd.getKeyValue(node)),
-        registerCommand('kubernetes.etcdExplorer.delete', (node: etcd.EtcdObject) => etcd.delKeyFromEtcdCluster(node)),
-        registerCommand('kubernetes.etcdExplorer.putKeyValue', (node: etcd.EtcdObject) => etcd.putKvToEtcdCluster(node)),
-        registerCommand('kubernetes.etcdExplorer.copyName', (node: etcd.EtcdObject) => node.copyName()),
+        // registerCommand('kubernetes.etcdExplorer.refresh', (node: etcd.EtcdObject) => etcdExplorer.refresh(node)),
+        // registerCommand('kubernetes.etcdExplorer.addExistingClusters', () => etcd.addExistingEtcdCluster(etcdExplorer, context)),
+        // registerCommand('kubernetes.etcdExplorer.removeClusters', () => etcdExplorer.removeClusters()),
+        // registerCommand('kubernetes.etcdExplorer.getKeyValue', (node: etcd.EtcdObject) => etcd.getKeyValue(node)),
+        // registerCommand('kubernetes.etcdExplorer.delete', (node: etcd.EtcdObject) => etcd.delKeyFromEtcdCluster(node)),
+        // registerCommand('kubernetes.etcdExplorer.putKeyValue', (node: etcd.EtcdObject) => etcd.putKvToEtcdCluster(node)),
+        // registerCommand('kubernetes.etcdExplorer.copyName', (node: etcd.EtcdObject) => node.copyName()),
 
         // Commands - Minio
         registerCommand('kubernetes.minioExplorer.refresh', (node: minio.MinioObject) => minioExplorer.refresh(node)),
@@ -349,7 +349,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<APIBro
         vscode.window.registerTreeDataProvider('extension.vsKubernetesExplorer', treeProvider),
         vscode.window.registerTreeDataProvider('extension.vsKubernetesHelmRepoExplorer', helmRepoTreeProvider),
         vscode.window.registerTreeDataProvider('kubernetes.cloudExplorer', cloudExplorer),
-        vscode.window.registerTreeDataProvider('kubernetes.etcdExplorer', etcdExplorer),
+        // vscode.window.registerTreeDataProvider('kubernetes.etcdExplorer', etcdExplorer),
         vscode.window.registerTreeDataProvider('kubernetes.minioExplorer', minioExplorer),
         vscode.window.registerTreeDataProvider('kubernetes.gitlabExplorer', gitlabExplorer),
         vscode.window.registerTreeDataProvider('kubernetes.homeExplorer', homeExplorer),

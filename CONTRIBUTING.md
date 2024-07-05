@@ -24,7 +24,7 @@ When running from source (that is, debugging in the Extension Development Host),
 
 (Note that end users do *not* need to do these steps.  VS Code extension packaging and installation takes care of them.  But running from source bypasses this process so we have to do them by hand.)
 
-If you get the error `Extension 'ms-kubernetes-tools.vscode-kubernetes-tools' failed to activate` (usually followed by `command 'extension.some-command-id' not found`) then it probably means you're missing an extension dependency.
+If you get the error `Extension 'kubernetes-tools.vscode-kubernetes-tools' failed to activate` (usually followed by `command 'extension.some-command-id' not found`) then it probably means you're missing an extension dependency.
 
 ## The 'Create Cluster' and 'Add Existing Cluster' Commands
 

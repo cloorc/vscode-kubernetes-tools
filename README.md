@@ -29,7 +29,7 @@ Features include:
 
 ### Install
 
-[Open this extension in the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=ms-kubernetes-tools.vscode-kubernetes-tools)
+[Open this extension in the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=kubernetes-tools.vscode-kubernetes-tools)
 
 ### Dependencies
 

@@ -10,7 +10,7 @@ import { GitlabToken } from "@gitbeaker/requester-utils";
 
 const axios = new Axios();
 
-export const GITLAB_STATE = "ms-kubernetes-tools.vscode-kubernetes-tools.gitlab-explorer";
+export const GITLAB_STATE = "kubernetes-tools.vscode-kubernetes-tools.gitlab-explorer";
 
 export interface Repository extends BaseRequestOptions<boolean> {
     host: string;

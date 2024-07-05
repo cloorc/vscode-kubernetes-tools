@@ -1,8 +1,8 @@
 # Change Log
 
-## [1.3.16240705]
+## [1.3.1624070501]
 
-* This is a release candidate version
+* Remove etcd support(conflict in proto)
 
 Contributors: Cloorc, Thank you all!!
 

@@ -4,7 +4,7 @@ import { Etcd3 } from 'etcd3';
 import { AbstractCluster, AbstractClusterExplorer, AbstractObject } from "./abstractcluster";
 import * as clipboard from './components/platform/clipboard';
 
-export const STATE = "ms-kubernetes-tools.vscode-kubernetes-tools.etcd-explorer";
+export const STATE = "kubernetes-tools.vscode-kubernetes-tools.etcd-explorer";
 
 export interface Cluster {
     name: string;

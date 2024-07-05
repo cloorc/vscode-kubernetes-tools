@@ -23,7 +23,7 @@ export class LogsPanel extends WebPanel {
             return new LogsPanel(panel, content, namespace, kindName, containers);
         };
         LogsPanel.kubectl = kubectl;
-        LogsPanel.extensionPath = vscode.extensions.getExtension('ms-kubernetes-tools.vscode-kubernetes-tools')!.extensionPath;
+        LogsPanel.extensionPath = vscode.extensions.getExtension('kubernetes-tools.vscode-kubernetes-tools')!.extensionPath;
         const localResourceRoot = vscode.Uri.file(path.join(LogsPanel.extensionPath, 'dist', 'logView'));
         return WebPanel.createOrShowInternal<LogsPanel>(content, `${namespace}/${kindName}`, LogsPanel.viewType, "Kubernetes Logs", LogsPanel.currentPanels, [localResourceRoot], fn);
     }

@@ -2,7 +2,7 @@
     "name": "kubernetes-tools",
     "displayName": "Kubernetes Free",
     "description": "Develop, deploy and debug Kubernetes applications",
-    "version": "1.3.16240705",
+    "version": "1.3.1624070501",
     "publisher": "cloorc",
     "engines": {
         "vscode": "^1.87.0"
@@ -25,74 +25,7 @@
     "aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
     "icon": "images/k8s-logo.png",
     "activationEvents": [
-        "onCommand:extension.vsKubernetesCreate",
-        "onCommand:extension.vsKubernetesCreateFile",
-        "onCommand:extension.vsKubernetesAddWatch",
-        "onCommand:extension.vsKubernetesDelete",
-        "onCommand:extension.vsKubernetesDeleteNow",
-        "onCommand:extension.vsKubernetesDeleteUri",
-        "onCommand:extension.vsKubernetesDeleteWatch",
-        "onCommand:extension.vsKubernetesDescribe.Refresh",
-        "onCommand:extension.vsKubernetesApply",
-        "onCommand:extension.vsKubernetesApplyFile",
-        "onCommand:extension.vsKubernetesExplain",
-        "onCommand:extension.vsKubernetesLoad",
-        "onCommand:extension.vsKubernetesGet",
-        "onCommand:extension.vsKubernetesRun",
-        "onCommand:extension.vsKubernetesLogs",
-        "onCommand:extension.vsKubernetesExpose",
-        "onCommand:extension.vsKubernetesDescribe",
-        "onCommand:extension.vsKubernetesSync",
-        "onCommand:extension.vsKubernetesExec",
-        "onCommand:extension.vsKubernetesTerminal",
-        "onCommand:extension.vsKubernetesDiff",
-        "onCommand:extension.vsKubernetesScale",
-        "onCommand:extension.vsKubernetesDebug",
-        "onCommand:extension.vsKubernetesDebugLocalTunnel",
-        "onCommand:extension.vsKubernetesFindLocalTunnelDebugProviders",
         "onCommand:extension.vsKubernetesSelectPod",
-        "onCommand:extension.vsKubernetesRemoveDebug",
-        "onCommand:extension.vsKubernetesConfigureFromCluster",
-        "onCommand:extension.vsKubernetesCreateCluster",
-        "onCommand:extension.vsKubernetesUseKubeconfig",
-        "onCommand:extension.vsKubernetesDashboard",
-        "onCommand:extension.vsMinikubeStop",
-        "onCommand:extension.vsMinikubeStart",
-        "onCommand:extension.vsMinikubeStatus",
-        "onCommand:extension.vsKubernetesPortForward",
-        "onCommand:extension.vsKubernetesDeleteFile",
-        "onCommand:extension.vsKubernetesAddFile",
-        "onCommand:extension.vsKubernetesUseNamespace",
-        "onCommand:extension.vsKubernetesShowEvents",
-        "onCommand:extension.vsKubernetesFollowEvents",
-        "onCommand:extension.vsKubernetesCronJobRunNow",
-        "onCommand:extension.helmTemplate",
-        "onCommand:extension.helmTemplatePreview",
-        "onCommand:extension.helmLint",
-        "onCommand:extension.helmDryRun",
-        "onCommand:extension.helmVersion",
-        "onCommand:extension.helmCreate",
-        "onCommand:extension.helmInsertReq",
-        "onCommand:extension.helmDepUp",
-        "onCommand:extension.helmInspectChart",
-        "onCommand:extension.helmFetchValues",
-        "onCommand:extension.helmGet",
-        "onCommand:extension.helmPackage",
-        "onCommand:extension.helmFetch",
-        "onCommand:extension.helmInstall",
-        "onCommand:extension.helmUninstall",
-        "onCommand:extension.helmRollback",
-        "onCommand:extension.helmDependencies",
-        "onCommand:extension.helmConvertToTemplate",
-        "onCommand:extension.helmParameterise",
-        "onView:extension.vsKubernetesExplorer",
-        "onView:extension.vsKubernetesHelmRepoExplorer",
-        "onView:kubernetes.cloudExplorer",
-        "onCommand:kubernetes.cloudExplorer.mergeIntoKubeconfig",
-        "onCommand:kubernetes.cloudExplorer.saveKubeconfig",
-        "onCommand:kubernetes.cloudExplorer.findProviders",
-        "onCommand:kubernetes.portForwarding.showSessions",
-        "onLanguage:helm",
         "onLanguage:yaml",
         "onFileSystem:k8smsx"
     ],
@@ -458,10 +391,6 @@
                     "name": "Clusters"
                 },
                 {
-                    "id": "kubernetes.etcdExplorer",
-                    "name": "Etcd"
-                },
-                {
                     "id": "kubernetes.gitlabExplorer",
                     "name": "GitLab Files"
                 },
@@ -565,21 +494,6 @@
                     "command": "kubernetes.cloudExplorer.findProviders",
                     "when": "view == kubernetes.cloudExplorer",
                     "group": "1"
-                },
-                {
-                    "command": "kubernetes.etcdExplorer.refresh",
-                    "when": "view == kubernetes.etcdExplorer",
-                    "group": "navigation"
-                },
-                {
-                    "command": "kubernetes.etcdExplorer.addExistingClusters",
-                    "when": "view == kubernetes.etcdExplorer",
-                    "group": "0"
-                },
-                {
-                    "command": "kubernetes.etcdExplorer.removeClusters",
-                    "when": "view == kubernetes.etcdExplorer",
-                    "group": "0"
                 },
                 {
                     "command": "kubernetes.minioExplorer.refresh",
@@ -944,26 +858,6 @@
                     "group": "1"
                 },
                 {
-                    "command": "kubernetes.etcdExplorer.getKeyValue",
-                    "when": "view == kubernetes.etcdExplorer",
-                    "group": "0"
-                },
-                {
-                    "command": "kubernetes.etcdExplorer.delete",
-                    "when": "view == kubernetes.etcdExplorer",
-                    "group": "0"
-                },
-                {
-                    "command": "kubernetes.etcdExplorer.putKeyValue",
-                    "when": "view == kubernetes.etcdExplorer && viewItem == vskubernetes/etcd/cluster",
-                    "group": "0"
-                },
-                {
-                    "command": "kubernetes.etcdExplorer.copyName",
-                    "when": "view == kubernetes.etcdExplorer",
-                    "group": "0"
-                },
-                {
                     "command": "kubernetes.minioExplorer.getContent",
                     "when": "view == kubernetes.minioExplorer",
                     "group": "0"
@@ -1057,18 +951,6 @@
                 {
                     "command": "extension.helmInspectChart",
                     "when": "view === extension.vsKubernetesHelmRepoExplorer"
-                },
-                {
-                    "command": "kubernetes.etcdExplorer.refresh",
-                    "when": "view === kubernetes.etcdExplorer"
-                },
-                {
-                    "command": "kubernetes.etcdExplorer.addExistingClusters",
-                    "when": "view === kubernetes.etcdExplorer"
-                },
-                {
-                    "command": "kubernetes.etcdExplorer.removeClusters",
-                    "when": "view === kubernetes.etcdExplorer"
                 },
                 {
                     "command": "kubernetes.minioExplorer.refresh",
@@ -1575,16 +1457,6 @@
                 "category": "Helm"
             },
             {
-                "command": "kubernetes.etcdExplorer.refresh",
-                "title": "Refresh",
-                "description": "Refresh all clusters",
-                "category": "ETCD",
-                "icon": {
-                    "dark": "images/dark/refresh.svg",
-                    "light": "images/light/refresh.svg"
-                }
-            },
-            {
                 "command": "extension.vsKubernetesRefreshCloudExplorer",
                 "title": "Refresh",
                 "category": "Kubernetes",
@@ -1592,42 +1464,6 @@
                     "light": "images/light/refresh.svg",
                     "dark": "images/dark/refresh.svg"
                 }
-            },
-            {
-                "command": "kubernetes.etcdExplorer.addExistingClusters",
-                "title": "Add cluster",
-                "description": "Add an existing cluster",
-                "category": "Kubernetes-ETCD"
-            },
-            {
-                "command": "kubernetes.etcdExplorer.removeClusters",
-                "title": "Remove cluster",
-                "description": "Remove an existing cluster",
-                "category": "Kubernetes-ETCD"
-            },
-            {
-                "command": "kubernetes.etcdExplorer.getKeyValue",
-                "title": "Get value",
-                "description": "Get value bound to current key",
-                "category": "Kubernetes-ETCD"
-            },
-            {
-                "command": "kubernetes.etcdExplorer.delete",
-                "title": "Delete",
-                "description": "Delete current key from cluster",
-                "category": "Kubernetes-ETCD"
-            },
-            {
-                "command": "kubernetes.etcdExplorer.putKeyValue",
-                "title": "Put",
-                "description": "Put new key and value pair to cluster",
-                "category": "Kubernetes-ETCD"
-            },
-            {
-                "command": "kubernetes.etcdExplorer.copyName",
-                "title": "Copy Name",
-                "description": "Cope object's name",
-                "category": "Kubernetes-ETCD"
             },
             {
                 "command": "kubernetes.minioExplorer.refresh",
@@ -1809,7 +1645,7 @@
         "compile": "npm run compile:ext && npm run compile:view",
         "compile:ext": "webpack --mode none",
         "compile:view": "webpack --mode none --config src/components/logs/webpack.config.js",
-        "watch": "webpack --mode development --watch --info-verbosity verbose",
+        "watch": "webpack --mode development --watch --color --stats-error-details",
         "test-compile": "tsc -p ./",
         "test": "npm run test-compile && node ./out/test/runTest.js",
         "package": "vsce package"
@@ -1836,8 +1672,8 @@
         "debug": "^3.1.0",
         "docker-file-parser": "^1.0.7",
         "dockerfile-parse": "^0.2.0",
-        "download": "^3.3.0",
-        "etcd3": "^1.1.0",
+        "download": "^7.1.0",
+        "etcd3": "^1.1.2",
         "fflate": "^0.7.4",
         "fuzzysearch": "^1.0.3",
         "got": "^12.5.1",
