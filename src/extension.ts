@@ -1252,7 +1252,7 @@ function findKindNameForText(text: string): Errorable<ResourceKindName> {
 
 function findKindNamesForText(text: string): Errorable<ResourceKindName[]> {
     try {
-        const objs: {}[] = YAML.loadAll(text) as {}[];
+        const objs: unknown[] = YAML.loadAll(text);
         if (objs.some((o) => !isKubernetesResource(o))) {
             if (objs.length === 1) {
                 return { succeeded: false, error: ['the open document is not a Kubernetes resource'] };
@@ -2064,7 +2064,7 @@ const applyKubernetes = () => {
     diffKubernetesCore(differenceCallback, undefined, undefined);
 };
 
-const handleError = (err: NodeJS.ErrnoException) => {
+const handleError = (err: NodeJS.ErrnoException | null) => {
     if (err) {
         vscode.window.showErrorMessage(err.message);
     }

@@ -52,7 +52,7 @@ async function addChart(context: Context, resourceYaml: string): Promise<void> {
         return;
     }
 
-    const template = yaml.loadAll(resourceYaml);
+    const template = yaml.load(resourceYaml);
     templatise(template);
 
     // TODO: offer a default

@@ -186,11 +186,11 @@ export class KubernetesClusterSchemaHolder {
             return;
         }
         for (const key of Object.keys(node)) {
-            this.replaceDefinitionRefsWithYamlSchemaUris((node as any)[key]);
+            this.replaceDefinitionRefsWithYamlSchemaUris(node[key as keyof object]);
         }
 
-        if (_.isString((node as { $ref: any }).$ref)) {
-            const name = getNameInDefinitions((node as { $ref: string }).$ref);
+        if ("$ref" in node && _.isString(node.$ref)) {
+            const name = getNameInDefinitions(node.$ref);
             const schema = this.lookup(name);
             if (schema) {
                 // replacing $ref

@@ -1,36 +1,30 @@
 # Change Log
 
-## [1.3.18]
-
-* Fix robustness for abnormal config for binary paths
-
-## [1.3.17]
-
-* Fix engine compatible version issue
-
 ## [1.3.16]
 
-* Fix repository reference issue
-* Show pod status, pod details(IP address, age etc.) on pod name
-* Support node terminal
-* Helm upgrade from dropdown list releases
-* Get helm values for upgrading target release
-* Show chart name on helm release name
-* Quick log for specific pod
-* Local home folder view support
-* MinIO cluster view support
-* Etcd cluster view support
-* GitLab view support
+* Fix robustness for abnormal config for binary paths
+* Fix engine compatible version issue
+* Hide convert context menu (#1244)
+* Test fixes. (#1242)
+
+Contributors: timheuer, Thank you all!!
 
 ## [1.3.15]
 
-* Add multiple features for ease of use
+* Revert killTree changes. Detail discussion here https://github.com/vscode-kubernetes-tools/vscode-kubernetes-tools/issues/1216
+
+Contributors: mikeseese, peterbom, michaellzc, mfilipe-te Thank you all!!
 
 ## [1.3.14]
 
-* Add new features from upgrade branch
+* Fix tool path configuration handling. (#1192)
+* No more kubectl logs (#1195)
+* Added snippet for CronJob (#1201)
+* Include missing bracket pairs to helm language configuration (#1198)
+* Kill the entire process tree instead of just the process (#1204)
+* Create a more responsive/adaptive layout for the log view (#1205)
 
-Contributors: cloorc
+Contributors: lstocchi, mikeseese, sergiogarciadev, aceat64, juozasg, a544jh, Thank you all!!
 
 ## [1.3.13]
 

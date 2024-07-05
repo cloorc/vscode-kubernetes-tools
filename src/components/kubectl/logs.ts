@@ -66,7 +66,7 @@ export function logsKubernetesPreview(
     }
     kubectl.legacySpawnAsChild(command, { title: `Kubectl: fetching logs ${explorerNode.name} to ${logFile} ... ` }).then((proc) => {
         if (proc) {
-            proc.stdout.pipe(createWriteStream(logFile));
+            proc.stdout!.pipe(createWriteStream(logFile));
             proc.on('exit', () => {
                 vscode.workspace.openTextDocument(logUri).then((doc) => vscode.window.showTextDocument(doc));
                 vscode.window.showInformationMessage(`Kubectl: logs of ${explorerNode.name} successfully!`);
@@ -225,7 +225,7 @@ async function logsForPod(kubectl: Kubectl): Promise<void> {
 async function logsForPodFromOpenDocument(kubectl: Kubectl, editor: vscode.TextEditor) {
     const text = editor.document.getText();
     try {
-        const obj: any = yaml.load(text);
+        const obj: unknown = yaml.load(text);
         if (isPod(obj)) {
             // document describes a pod.
             const podSummary = {

@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
+        "module": "NodeNext",
         "target": "ES2021",
         "outDir": "out",
         "moduleResolution": "NodeNext",
@@ -20,6 +20,7 @@
         "noImplicitThis": true,
         "strict": true,
         "forceConsistentCasingInFileNames": true,
+        "esModuleInterop": true,
         "skipDefaultLibCheck": true,
         "skipLibCheck": true,
     },
