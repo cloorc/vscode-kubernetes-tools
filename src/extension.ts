@@ -1759,8 +1759,12 @@ async function deleteKubernetes(delMode: KubernetesDeleteMode, explorerNode?: Cl
             }
         }
         const nsarg = explorerNode.namespace ? `--namespace ${explorerNode.namespace}` : '';
-        const execResult = await kubectl.invokeCommandWithFeedback(`delete ${explorerNode.kindName} ${nsarg} ${delModeArg}`, `Deleting ${explorerNode.kindName}...`);
-        await reportDeleteResult(explorerNode.kindName, execResult);
+        const cmd = `delete ${explorerNode.kindName} ${nsarg} ${delModeArg}`;
+        const confirmed = await warnConfirm(`This will delete resource with \`${cmd}\``, "I'm aware of the risks: delete anyway", "Don't delete");
+        if (confirmed) {
+            const execResult = await kubectl.invokeCommandWithFeedback(cmd, `Deleting ${explorerNode.kindName}...`);
+            await reportDeleteResult(explorerNode.kindName, execResult);
+        }
     } else {
         const isMinimalWorkflow = config.isMinimalWorkflow();
         const kindName = await promptKindName(kuberesources.commonKinds, 'delete', { nameOptional: true, skipFreeTextPrompt: isMinimalWorkflow });
@@ -1769,8 +1773,12 @@ async function deleteKubernetes(delMode: KubernetesDeleteMode, explorerNode?: Cl
             if (!containsName(kindName)) {
                 commandArgs = kindName + " --all";
             }
-            const execResult = await kubectl.invokeCommandWithFeedback(`delete ${commandArgs} ${delModeArg}`, `Deleting ${kindName}...`);
-            await reportDeleteResult(kindName, execResult);
+            const cmd = `delete ${commandArgs} ${delModeArg}`;
+            const confirmed = await warnConfirm(`This will delete resource with \`${cmd}\``, "I'm aware of the risks: delete anyway", "Don't delete");
+            if (confirmed) {
+                const execResult = await kubectl.invokeCommandWithFeedback(cmd, `Deleting ${kindName}...`);
+                await reportDeleteResult(kindName, execResult);
+            }
         }
     }
 }

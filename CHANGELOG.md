@@ -1,8 +1,10 @@
 # Change Log
 
-## [1.3.1624070501]
+## [1.3.1624071001]
 
 * Remove etcd support(conflict in proto)
+* Merge commits from [vscode-kubernetes-tools/vscode-kubernetes-tools](https://github.com/vscode-kubernetes-tools/vscode-kubernetes-tools)
+* Need confirm when deleting resources
 
 Contributors: Cloorc, Thank you all!!
 
