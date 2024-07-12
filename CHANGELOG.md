@@ -1,10 +1,26 @@
 # Change Log
 
-## [1.3.1624071101]
+## [1.3.1624071201]
 
 * Remove etcd support(conflict in proto)
-* Merge commits from [vscode-kubernetes-tools/vscode-kubernetes-tools](https://github.com/vscode-kubernetes-tools/vscode-kubernetes-tools)
 * Need confirm when deleting resources
+* (upstream/master) Bump sinon from 17.0.1 to 18.0.0 (#1287)
+* (tag: 1.3.1624071101) Merge branch 'master' of https://github.com/vscode-kubernetes-tools/vscode-kubernetes-tools
+* Bump typescript from 5.4.3 to 5.5.3 (#1286)
+* Bump vscode-extension-telemetry from 0.1.7 to 0.4.5 (#1284)
+* Bump @types/tar from 6.1.11 to 6.1.13 (#1283)
+* Fix the package-ecosystem form empty to npm. (#1282)
+* (tag: 1.3.1624071001) release: 1.3.16 rc 2
+* Merge branch 'master' of https://github.com/vscode-kubernetes-tools/vscode-kubernetes-tools
+* Fix webpack errors (#1281)
+* Fix/build ev ubuntu failure (#1280)
+* Fix the ubuntu failure. (#1279)
+* Bump golang.org/x/crypto in the go_modules group across 1 directory (#1278)
+* Remove old site scaffolding project and Update/package dependencies (#1277)
+* feat(common): upgrade gitbeaker
+* feat(common): show install verbose
+* Merge branch 'master' of https://github.com/vscode-kubernetes-tools/vscode-kubernetes-tools
+
 
 Contributors: Cloorc, Thank you all!!
 
