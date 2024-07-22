@@ -1,7 +1,8 @@
 # Change Log
 
-## [1.3.1624071201]
+## [1.3.1624072201]
 
+* Using `Tail 300 & Follow` on pod/job log shortcut
 * Remove etcd support(conflict in proto)
 * Need confirm when deleting resources
 * (upstream/master) Bump sinon from 17.0.1 to 18.0.0 (#1287)

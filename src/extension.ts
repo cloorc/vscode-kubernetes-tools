@@ -1610,7 +1610,7 @@ async function getContainerQuery(resource: ContainerContainer, containerType: st
         const bits = s.split('\t');
         return { name: bits[0] ? bits[0].trim() : '', image: bits[1] ? bits[1].trim() : '', initContainer: containerType === 'initContainers'};
     });
-    return containersEx.filter(c => c.name !== '');
+    return containersEx.filter((c) => c.name !== '');
 }
 
 export async function getContainersForResource(resource: ContainerContainer): Promise<Container[] | null> {

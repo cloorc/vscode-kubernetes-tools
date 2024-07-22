@@ -2,7 +2,7 @@
     "name": "kubernetes-tools",
     "displayName": "Kubernetes Free",
     "description": "Develop, deploy and debug Kubernetes applications",
-    "version": "1.3.1624071201",
+    "version": "1.3.1624072201",
     "publisher": "cloorc",
     "engines": {
         "vscode": "^1.87.0"
@@ -743,7 +743,7 @@
                     "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource\\.pod/i"
                 },
                 {
-                    "command": "extension.vsKubernetesLogs",
+                    "command": "extension.vsKubernetesLogsLast300AndFollow",
                     "group": "inline",
                     "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource\\.(pod|job)/i"
                 },
@@ -1126,19 +1126,15 @@
                 "icon": "$(list-flat)"
             },
             {
-                "command": "extension.vsKubernetesLogsLast300AndFollow",
-                "title": "Logs last 300 rows & Follow",
-                "category": "Kubernetes"
-            },
-            {
                 "command": "extension.vsKubernetesLogsPreview",
                 "title": "Logs Preview",
                 "category": "Kubernetes"
             },
             {
                 "command": "extension.vsKubernetesLogsLast300AndFollow",
-                "title": "Logs last 300 rows & Follow",
-                "category": "Kubernetes"
+                "title": "Tail 300 & Follow",
+                "category": "Kubernetes",
+                "icon": "$(list-flat)"
             },
             {
                 "command": "extension.vsKubernetesLogsPreview",
