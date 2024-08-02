@@ -2,7 +2,7 @@
     "name": "kubernetes-tools",
     "displayName": "Kubernetes Free",
     "description": "Develop, deploy and debug Kubernetes applications",
-    "version": "1.3.1624072901",
+    "version": "1.3.1624080201",
     "publisher": "cloorc",
     "engines": {
         "vscode": "^1.91.0"
@@ -595,7 +595,17 @@
                 {
                     "command": "extension.vsKubernetesCopy",
                     "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource\\./i",
+                    "group": "inline"
+                },
+                {
+                    "command": "extension.vsKubernetesCopy",
+                    "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource\\./i",
                     "group": "1"
+                },
+                {
+                    "command": "extension.vsKubernetesRefresh",
+                    "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource\\./i",
+                    "group": "inline"
                 },
                 {
                     "command": "extension.vsKubernetesRefresh",
@@ -634,6 +644,11 @@
                 },
                 {
                     "command": "extension.vsKubernetesEditLegacy",
+                    "group": "inline",
+                    "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource(?!\\.namespace).*/i"
+                },
+                {
+                    "command": "extension.vsKubernetesEditLegacy",
                     "group": "2@3",
                     "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource(?!\\.namespace).*/i"
                 },
@@ -646,6 +661,11 @@
                     "command": "extension.vsKubernetesInstances",
                     "group": "2@5",
                     "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource\\.(deployment|statefulset|daemonset)/i"
+                },
+                {
+                    "command": "extension.vsKubernetesDelete",
+                    "group": "inline",
+                    "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource.*/i"
                 },
                 {
                     "command": "extension.vsKubernetesDelete",
@@ -719,8 +739,18 @@
                 },
                 {
                     "command": "extension.vsKubernetesPortForward",
+                    "group": "inline",
+                    "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource\\.pod/i"
+                },
+                {
+                    "command": "extension.vsKubernetesPortForward",
                     "group": "2@7",
                     "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource\\.pod/i"
+                },
+                {
+                    "command": "extension.vsKubernetesPortForward",
+                    "group": "inline",
+                    "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource\\.service/i"
                 },
                 {
                     "command": "extension.vsKubernetesPortForward",
@@ -731,6 +761,11 @@
                     "command": "extension.vsKubernetesPortForward",
                     "group": "2@9",
                     "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource\\.deployment/i"
+                },
+                {
+                    "command": "extension.vsKubernetesRestart",
+                    "group": "inline",
+                    "when": "view == extension.vsKubernetesExplorer && viewItem =~ /vsKubernetes\\.resource\\.(deployment|job|rc|rs|statefulset)/i"
                 },
                 {
                     "command": "extension.vsKubernetesScale",
@@ -1027,7 +1062,8 @@
             {
                 "command": "extension.vsKubernetesDelete",
                 "title": "Delete",
-                "category": "Kubernetes"
+                "category": "Kubernetes",
+                "icon": "$(remove)"
             },
             {
                 "command": "extension.vsKubernetesDeleteNow",
@@ -1052,7 +1088,8 @@
             {
                 "command": "extension.vsKubernetesEditLegacy",
                 "title": "Edit Legacy",
-                "category": "Kubernetes"
+                "category": "Kubernetes",
+                "icon": "$(edit)"
             },
             {
                 "command": "extension.vsKubernetesServiceBridge",
@@ -1112,7 +1149,8 @@
             {
                 "command": "extension.vsKubernetesRestart",
                 "title": "Restart",
-                "category": "Kubernetes"
+                "category": "Kubernetes",
+                "icon": "$(issue-reopened)"
             },
             {
                 "command": "extension.vsKubernetesRun",
@@ -1261,21 +1299,20 @@
             {
                 "command": "extension.vsKubernetesPortForward",
                 "title": "Port Forward",
-                "category": "Kubernetes"
+                "category": "Kubernetes",
+                "icon": "$(remote)"
             },
             {
                 "command": "extension.vsKubernetesCopy",
                 "title": "Copy Name",
-                "category": "Kubernetes"
+                "category": "Kubernetes",
+                "icon": "$(copy)"
             },
             {
                 "command": "extension.vsKubernetesRefresh",
                 "title": "Refresh",
                 "category": "Kubernetes",
-                "icon": {
-                    "light": "resources/light/refresh.svg",
-                    "dark": "resources/dark/refresh.svg"
-                }
+                "icon": "$(refresh)"
             },
             {
                 "command": "extension.vsKubernetesAddFile",

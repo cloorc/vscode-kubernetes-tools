@@ -1,7 +1,8 @@
 # Change Log
 
-## [1.3.1624072901]
+## [1.3.1624080201]
 
+* Add more shortcuts to context
 * Merge branch 'master' of https://github.com/vscode-kubernetes-tools/vscode-kubernetes-tools (#1af87fa)
 * Using `Tail 300 & Follow` on pod/job log shortcut
 * Remove etcd support(conflict in proto)
