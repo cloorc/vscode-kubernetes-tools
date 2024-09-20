@@ -1,6 +1,6 @@
 # Change Log
 
-## [1.3.1624080201]
+## [1.3.1624092001]
 
 * Add more shortcuts to context
 * Merge branch 'master' of https://github.com/vscode-kubernetes-tools/vscode-kubernetes-tools (#1af87fa)
