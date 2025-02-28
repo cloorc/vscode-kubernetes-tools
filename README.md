@@ -337,3 +337,26 @@ the `vs-helm` extension by @technosophos.
 
 The 'infer `kubectl` version' feature was inspired by @jakepearson's `k` utility
 (https://github.com/jakepearson/k), and some parts of the design were based on his implementation.
+
+## Using the extension
+
+* Install the extension from the Visual Studio Marketplace. You can find the link in the `README.md` file.
+* Ensure you have the necessary dependencies installed, such as `kubectl`, `docker` or `buildah`, and `helm`. These dependencies are required for various features of the extension.
+* Configure the extension by adding the necessary settings to your VS Code preferences. For example, you can set the image prefix for your container images using the `vsdocker.imageUser` setting.
+* Use the various commands provided by the extension to interact with your Kubernetes clusters, such as creating, deleting, and applying resources, viewing logs, and debugging applications.
+
+## Configuring the extension
+
+* Open your VS Code preferences (File > Preferences) and add the necessary configuration settings for the extension.
+* Set the `vs-kubernetes.kubeconfig` setting to specify the file path to the kubeconfig file you want to use.
+* Add the `vs-kubernetes.knownKubeconfigs` setting to list the file paths of kubeconfig files that you want to be able to quickly switch between.
+* Configure other settings as needed, such as `vs-kubernetes.namespace`, `vs-kubernetes.kubectl-path`, and `vs-kubernetes.helm-path`.
+
+## Using commands and features
+
+* Access the various commands provided by the extension through the command menu (Ctrl+Shift+P) or by binding them to keys.
+* Use commands like `Kubernetes: Load`, `Kubernetes: Get`, `Kubernetes: Logs`, and `Kubernetes: Watch` to interact with your Kubernetes resources.
+* Use commands like `Kubernetes: Create`, `Kubernetes: Delete`, `Kubernetes: Apply`, and `Kubernetes: Expose` while viewing a Kubernetes manifest file.
+* Use commands like `Kubernetes: Run`, `Kubernetes: Terminal`, `Kubernetes: Exec`, and `Kubernetes: Debug (Launch)` for application directories.
+* Use cluster creation commands like `Kubernetes: Create Cluster` and configuration commands like `Kubernetes: Add Existing Cluster` to manage your clusters.
+* Use miscellaneous commands like `Kubernetes: Open Dashboard` and `Kubernetes: Port Forward` for additional functionality.
