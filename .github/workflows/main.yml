@@ -1,6 +1,6 @@
 name: Create GitHub Release
-# Builds VSIX, creates GitHub release with VSIX attached,
-# and publishes to the VS Code Marketplace.
+# Builds VSIX, creates GitHub Release with VSIX attached, and publishes
+# to the VS Code Marketplace. Replaces the internal 1ES pipeline for forks.
 
 on: [workflow_dispatch]
 
@@ -15,28 +15,28 @@ jobs:
         packages: none
     steps:
     - name: Checkout
-      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v6.0.1
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
-    - name: Setup Bun
-      uses: oven-sh/setup-bun@v2
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
       with:
-        bun-version: latest
+        node-version: 20
 
     - name: Install dependencies
-      run: bun install --frozen-lockfile
+      run: npm install
 
-    - name: Install dependencies
-      run: bun install
+    - name: Build extension
+      run: npm run compile
 
     - name: Package VSIX
-      run: bun run package
+      run: npm run package
 
     - name: Get current package version
       id: package_version
-      uses: martinbeentjes/npm-get-version-action@3cf273023a0dda27efcd3164bdfb51908dd46a5b # v1.3.1
+      uses: martinbeentjes/npm-get-version-action@3cf273023a0dda27efcd3164bdfb51908dd46a5b
 
     - name: Check version is mentioned in Changelog
-      uses: mindsers/changelog-reader-action@1faaf50aa09d5793d9a100819973df801febfb31 # v2.4.0
+      uses: mindsers/changelog-reader-action@1faaf50aa09d5793d9a100819973df801febfb31
       id: changelog_reader
       with:
         version: ${{ steps.package_version.outputs.current-version }}
@@ -44,15 +44,14 @@ jobs:
 
     - name: Create a GitHub Release
       id: create_release
-      uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3.0.1
+      uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ steps.package_version.outputs.current-version }}
         name: ${{ steps.package_version.outputs.current-version }}
         body: ${{ steps.changelog_reader.outputs.changes }}
-        files: |
-          *.vsix
+        files: '*.vsix'
 
     - name: Publish to VS Code Marketplace
-      run: bun x @vscode/vsce publish --pat "${{ secrets.VS_MARKETPLACE_TOKEN }}" --packagePath $(ls *.vsix)
+      run: npx @vscode/vsce publish --pat "${{ secrets.VS_MARKETPLACE_TOKEN }}" --packagePath $(ls *.vsix)
