@@ -55,4 +55,4 @@ jobs:
           *.vsix
 
     - name: Publish to VS Code Marketplace
-      run: bun x @vscode/vsce publish --pat "${{ secrets.VSCODE_MARKETPLACE_TOKEN }}" --packagePath $(ls *.vsix)
+      run: bun x @vscode/vsce publish --pat "${{ secrets.VS_MARKETPLACE_TOKEN }}" --packagePath $(ls *.vsix)
