@@ -25,8 +25,8 @@ jobs:
     - name: Install dependencies
       run: bun install --frozen-lockfile
 
-    - name: Build extension
-      run: bun run vscode:prepublish
+    - name: Install dependencies
+      run: bun install
 
     - name: Package VSIX
       run: bun run package
@@ -55,4 +55,4 @@ jobs:
           *.vsix
 
     - name: Publish to VS Code Marketplace
-      run: bun x @vscode/vsce publish --pat "${{ secrets.VSCE_PAT }}" --packagePath $(ls *.vsix)
+      run: bun x @vscode/vsce publish --pat "${{ secrets.VSCODE_MARKETPLACE_TOKEN }}" --packagePath $(ls *.vsix)
