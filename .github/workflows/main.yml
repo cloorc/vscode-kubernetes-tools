@@ -1,8 +1,7 @@
 name: Create GitHub Release
-# VSIX packaging, signing, and Marketplace publishing are handled by the
-# 1ES pipeline (.pipelines/1es-pipeline.yml). This workflow only creates
-# the GitHub release and tag for the version in package.json, using the
-# matching CHANGELOG.md section as the release body.
+# Builds VSIX, creates GitHub release with VSIX attached,
+# and publishes to the VS Code Marketplace.
+
 on: [workflow_dispatch]
 
 jobs:
@@ -17,16 +16,34 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v6.0.1
+
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: latest
+
+    - name: Install dependencies
+      run: bun install --frozen-lockfile
+
+    - name: Build extension
+      run: bun run vscode:prepublish
+
+    - name: Package VSIX
+      run: bun run package
+
     - name: Get current package version
       id: package_version
       uses: martinbeentjes/npm-get-version-action@3cf273023a0dda27efcd3164bdfb51908dd46a5b # v1.3.1
+
     - name: Check version is mentioned in Changelog
       uses: mindsers/changelog-reader-action@1faaf50aa09d5793d9a100819973df801febfb31 # v2.4.0
       id: changelog_reader
       with:
         version: ${{ steps.package_version.outputs.current-version }}
         path: 'CHANGELOG.md'
+
     - name: Create a GitHub Release
+      id: create_release
       uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3.0.1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -34,3 +51,8 @@ jobs:
         tag_name: ${{ steps.package_version.outputs.current-version }}
         name: ${{ steps.package_version.outputs.current-version }}
         body: ${{ steps.changelog_reader.outputs.changes }}
+        files: |
+          *.vsix
+
+    - name: Publish to VS Code Marketplace
+      run: bun x @vscode/vsce publish --pat "${{ secrets.VSCE_PAT }}" --packagePath $(ls *.vsix)
