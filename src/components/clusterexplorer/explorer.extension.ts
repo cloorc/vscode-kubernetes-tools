@@ -6,5 +6,5 @@ export interface ExplorerExtender<T> {
 }
 
 export interface ExplorerUICustomizer<T> {
-    customize(element: T, treeItem: vscode.TreeItem): true | Thenable<true>;
+    customize(element: T, treeItem: vscode.TreeItem): true | Promise<true>;
 }

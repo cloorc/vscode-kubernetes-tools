@@ -13,7 +13,7 @@ export abstract class FolderNode extends ClusterExplorerNodeImpl implements Clus
 
     abstract getChildren(kubectl: Kubectl, host: Host): vscode.ProviderResult<ClusterExplorerNode[]>;
 
-    getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
+    getTreeItem(): vscode.TreeItem | Promise<vscode.TreeItem> {
         const treeItem = new vscode.TreeItem(this.displayName, vscode.TreeItemCollapsibleState.Collapsed);
         treeItem.contextValue = this.contextValue || `vsKubernetes.${this.id}`;
         return treeItem;

@@ -1,11 +1,11 @@
-//@ts-check
+// @ts-check
 
 'use strict';
 
 const path = require('path');
 const webpack = require('webpack');
 
-/**@type {import('webpack').Configuration}*/
+/** @type {import('webpack').Configuration} */
 const config = {
   target: 'node',
   entry: './src/extension.ts',
@@ -45,15 +45,8 @@ const config = {
             loader: 'ts-loader'
           }
         ]
-      },
-      {
-          test: /\.yaml$/,
-          use: ['file-loader']
       }
     ]
-  },
-  node: {
-    __dirname: false
   }
 };
 module.exports = config;

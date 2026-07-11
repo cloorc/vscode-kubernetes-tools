@@ -30,5 +30,5 @@ export namespace ClusterProviderV1 {
         onNext(value: T): Promise<boolean>;
     }
 
-    export type Sequence<T> = T | Thenable<T> | Observable<T>;
+    export type Sequence<T> = T | Promise<T> | Observable<T>;
 }

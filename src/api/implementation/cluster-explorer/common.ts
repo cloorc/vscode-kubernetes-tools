@@ -24,7 +24,7 @@ export interface Node {
 
 export interface NodeSource {
     at(parentFolder: string | undefined): NodeContributor;
-    if(condition: () => boolean | Thenable<boolean>): NodeSource;
+    if(condition: () => boolean | Promise<boolean>): NodeSource;
     nodes(): Promise<Node[]>;
 }
 
@@ -46,7 +46,7 @@ export function adaptToExplorerUICustomizer(nodeUICustomizer: ClusterExplorerV1.
 
 class NodeUICustomizerAdapter implements ExplorerUICustomizer<ClusterExplorerNode> {
     constructor(private readonly impl: ClusterExplorerV1.NodeUICustomizer | ClusterExplorerV1_1.NodeUICustomizer) {}
-    customize(element: ClusterExplorerNode, treeItem: vscode.TreeItem): true | Thenable<true> {
+    customize(element: ClusterExplorerNode, treeItem: vscode.TreeItem): true | Promise<true> {
         const waiter = this.impl.customize(adaptKubernetesExplorerNode(element), treeItem);
         if (waiter) {
             return waitFor(waiter);
@@ -55,7 +55,7 @@ class NodeUICustomizerAdapter implements ExplorerUICustomizer<ClusterExplorerNod
     }
 }
 
-async function waitFor(waiter: Thenable<void>): Promise<true> {
+async function waitFor(waiter: Promise<void>): Promise<true> {
     await waiter;
     return true;
 }
@@ -154,7 +154,7 @@ export class ContributedNode implements ClusterExplorerCustomNode {
 export function apiNodeSourceOf(nodeSet: NodeSourceImpl): NodeSource & BuiltInNodeSource {
     return {
         at(parent: string | undefined) { const ee = nodeSet.at(parent); return apiNodeContributorOf(ee); },
-        if(condition: () => boolean | Thenable<boolean>) { return apiNodeSourceOf(nodeSet.if(condition)); },
+        if(condition: () => boolean | Promise<boolean>) { return apiNodeSourceOf(nodeSet.if(condition)); },
         async nodes() { return (await nodeSet.nodes()).map(apiNodeOf); },
         [BUILT_IN_NODE_SOURCE_KIND_TAG]: true,
         impl: nodeSet
@@ -185,7 +185,7 @@ export function internalNodeSourceOf(nodeSet: ClusterExplorerV1.NodeSource | Clu
     }
     return {
         at(parent: string | undefined) { return internalNodeContributorOf(nodeSet.at(parent)); },
-        if(condition: () => boolean | Thenable<boolean>) { return internalNodeSourceOf(nodeSet).if(condition); },
+        if(condition: () => boolean | Promise<boolean>) { return internalNodeSourceOf(nodeSet).if(condition); },
         async nodes() { return (await nodeSet.nodes()).map(internalNodeOf); }
     };
 }

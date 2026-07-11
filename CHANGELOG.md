@@ -2,6 +2,24 @@
 
 ## [1.4.0]
 
+### Fork Features (cloorc/kubernetes-tools)
+
+* **MinIO Explorer**: Browse MinIO object storage clusters in the sidebar
+* **etcd Explorer**: Browse etcd key-value stores, view/edit/delete keys
+* **GitLab Explorer**: Browse GitLab repositories, create merge requests, submit files
+* **Home Explorer**: Browse local filesystem from the Kubernetes sidebar
+* **Abstract Cluster Framework**: Reusable TreeDataProvider for explorer panels
+* **Kubernetes Enhancements**:
+  - Pod list extended with `age`, `ip`, `node`, `restarts` fields
+  - Logs: "Track Logs" (tail -f in terminal) and "Preview Logs" (in editor)
+  - Helm annotation constants exported (`HELM_ANNOTATION_RESOURCE_POLICY`, etc.)
+* **Infrastructure**:
+  - Bun package manager support (bun.lock)
+  - etcd proto definitions
+  - Stream utility helpers (readToBuffer, readToList)
+
+### Upstream Changes
+
 * Dependabot PRs
 * [Test Suite Update]: mergeIntoKubeconfig test suite addition & suite config updates
 * Update: vscode package version and engine
@@ -21,6 +39,7 @@
 * Docs: Fix outdated references across documentation
 * Updating auth prompt detection to match additional known login URLs
 
+Contributors: Thank you so much for Contributions and Reviews from knowlsie, tejhan, bosesuneha, Tatsinnit. Thank you all!!
 Contributors: Thank you so much for Contributions and Reviews from knowlsie, tejhan, bosesuneha, Tatsinnit. Thank you all!!
 
 ## [1.3.29]

@@ -64,7 +64,7 @@ export class JavaDebugProvider implements IDebugProvider {
 
         // Resolve the debug port.
         const matches = dockerfile.searchLaunchArgs(javaDebugOptsRegExp);
-        if (extensionUtils.isNonEmptyArray(matches)) { // Enable debug options in command lines directly.
+        if (null !== matches && extensionUtils.isNonEmptyArray(matches)) { // Enable debug options in command lines directly.
             const addresses = matches[2].split("=")[1].split(":");
             rawDebugPortInfo = addresses[addresses.length - 1];
         } else if (extensionUtils.isNonEmptyArray(dockerfile.searchLaunchArgs(/\$\{?JAVA_OPTS\}?/))) { // Use $JAVA_OPTS env var in command lines.

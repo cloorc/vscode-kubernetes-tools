@@ -45,15 +45,14 @@ import { Reporter } from './telemetry';
 import * as telemetry from './telemetry-helper';
 import { dashboardKubernetes } from './components/kubectl/dashboard';
 import { portForwardKubernetes } from './components/kubectl/port-forward';
-import { logsKubernetes } from './components/kubectl/logs';
+import { logsKubernetes, logsKubernetesPreview, logsKubernetesWithLatest300RowsAndFollow } from './components/kubectl/logs';
 import { Errorable, failed, succeeded } from './errorable';
 import { Git } from './components/git/git';
 import { DebugSession } from './debug/debugSession';
-import { suggestedShellForContainer } from './utils/container-shell';
 import { getDebugProviderOfType, getSupportedDebuggerTypes } from './debug/providerRegistry';
 import * as config from './components/config/config';
 import * as browser from './components/platform/browser';
-
+import { suggestedShellForContainer } from './utils/container-shell';
 import { registerYamlSchemaSupport, updateYAMLSchema } from './yaml-support/yaml-schema';
 import * as clusterproviderregistry from './components/clusterprovider/clusterproviderregistry';
 import * as azureclusterprovider from './components/clusterprovider/azure/azureclusterprovider';
@@ -91,6 +90,9 @@ import { setAssetContext } from './assets';
 import { fixOldInstalledBinaryPermissions } from './components/installer/fixwriteablebinaries';
 import { interpolateVariables } from './utils/interpolation';
 import { AKSProvider } from './components/cloudprovider/aksprovider';
+import * as minio from './miniocluster';
+import * as gitlab from './gitlab.explorer';
+import * as fe from './home.explorer';
 
 let explainActive = false;
 let swaggerSpecPromise: Promise<explainer.SwaggerModel | undefined> | null = null;
@@ -146,6 +148,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<APIBro
     const helmRepoTreeProvider = helmRepoExplorer.create(host);
     const cloudExplorer = new CloudExplorer();
     const localTunnelDebugger = new LocalTunnelDebugger();
+    const minioExplorer = minio.create(host, context);
+    const gitlabExplorer = gitlab.create(host, context);
+    const homeExplorer = fe.create(host, context);
     const resourceDocProvider = new KubernetesResourceVirtualFileSystemProvider(kubectl, host);
     const resourceLinkProvider = new KubernetesResourceLinkProvider();
     const previewProvider = new HelmTemplatePreviewDocumentProvider();
@@ -192,6 +197,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<APIBro
         registerCommand('extension.vsKubernetesGet', getKubernetes),
         registerCommand('extension.vsKubernetesRun', runKubernetes),
         registerCommand('extension.vsKubernetesLogs', (explorerNode: ClusterExplorerResourceNode) => { logsKubernetes(kubectl, explorerNode); }),
+        registerCommand('extension.vsKubernetesLogsLast300AndFollow', (explorerNode: ClusterExplorerResourceNode) => { logsKubernetesWithLatest300RowsAndFollow(kubectl, explorerNode); }),
+        registerCommand('extension.vsKubernetesLogsPreview', (explorerNode: ClusterExplorerResourceNode) => { logsKubernetesPreview(kubectl, explorerNode); }),
         registerCommand('extension.vsKubernetesExpose', exposeKubernetes),
         registerCommand('extension.vsKubernetesDescribe', describeKubernetes),
         registerCommand('extension.vsKubernetesSync', syncKubernetes),
@@ -263,6 +270,25 @@ export async function activate(context: vscode.ExtensionContext): Promise<APIBro
         registerCommand('kubernetes.cloudExplorer.saveKubeconfig', kubernetesSaveKubeconfig),
         registerCommand('kubernetes.cloudExplorer.findProviders', kubernetesFindCloudProviders),
 
+        // Commands - MinIO
+        registerCommand('kubernetes.minioExplorer.refresh', (node: any) => minioExplorer.refresh(node)),
+        registerCommand('kubernetes.minioExplorer.addExistingClusters', () => minio.addExistingMinioCluster(minioExplorer, context)),
+        registerCommand('kubernetes.minioExplorer.removeClusters', () => minioExplorer.removeClusters()),
+        registerCommand('kubernetes.minioExplorer.getContent', (node: any) => minio.getContent(node)),
+
+        // Commands - GitLab
+        registerCommand('kubernetes.gitlabExplorer.refresh', (node: any) => gitlabExplorer.refresh(node)),
+        registerCommand('kubernetes.gitlabExplorer.addExistingRepository', () => gitlab.addExistingGitLabRepository(gitlabExplorer, context)),
+        registerCommand('kubernetes.gitlabExplorer.createMergeRequest', (node: any) => node.createMergeRequest()),
+        registerCommand('kubernetes.gitlabExplorer.removeRepository', () => gitlabExplorer.removeClusters()),
+        registerCommand('kubernetes.gitlabExplorer.getContent', (node: any) => gitlab.getContent(node)),
+        registerCommand('kubernetes.gitlabExplorer.submitContent', () => gitlabExplorer.submitContentToRepository()),
+        registerCommand('kubernetes.gitlabExplorer.copyPath', (node: any) => node.copyPath()),
+        registerCommand('kubernetes.gitlabExplorer.copyName', (node: any) => node.copyName()),
+
+        // Commands - Home Explorer
+        registerCommand('kubernetes.homeExplorer.refresh', (node: any) => homeExplorer.refresh(node)),
+
         // Commands - special no-op command for debouncing concurrent activations
         vscode.commands.registerCommand('extension.vsKubernetesDebounceActivation', () => {}),
 
@@ -300,7 +326,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<APIBro
         vscode.window.registerTreeDataProvider('extension.vsKubernetesExplorer', treeProvider),
         vscode.window.registerTreeDataProvider('extension.vsKubernetesHelmRepoExplorer', helmRepoTreeProvider),
         vscode.window.registerTreeDataProvider('kubernetes.cloudExplorer', cloudExplorer),
-
+        vscode.window.registerTreeDataProvider('kubernetes.minioExplorer', minioExplorer),
+        vscode.window.registerTreeDataProvider('kubernetes.gitlabExplorer', gitlabExplorer),
+        vscode.window.registerTreeDataProvider('kubernetes.gitlabExplorer', gitlabExplorer),
+        vscode.window.registerTreeDataProvider('kubernetes.homeExplorer', homeExplorer),
         // Temporarily loaded resource providers
         vscode.workspace.registerFileSystemProvider(K8S_RESOURCE_SCHEME, resourceDocProvider, { /* TODO: case sensitive? */ }),
         vscode.workspace.registerFileSystemProvider(K8S_RESOURCE_SCHEME_READONLY, resourceDocProvider, { isReadonly: true }),

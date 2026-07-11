@@ -37,7 +37,7 @@ export class ResourceNode extends ClusterExplorerNodeImpl implements ClusterExpl
         }
         return children;
     }
-    getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
+    getTreeItem(): vscode.TreeItem | Promise<vscode.TreeItem> {
         const collapsibleState = this.isExpandable ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
         const treeItem = new vscode.TreeItem(this.name, collapsibleState);
         treeItem.command = {

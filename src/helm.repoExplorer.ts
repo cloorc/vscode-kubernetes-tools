@@ -67,7 +67,7 @@ export class HelmRepoExplorer implements vscode.TreeDataProvider<HelmObject> {
         });
     }
 
-    getTreeItem(element: HelmObject): vscode.TreeItem | Thenable<vscode.TreeItem> {
+    getTreeItem(element: HelmObject): vscode.TreeItem | Promise<vscode.TreeItem> {
         return element.getTreeItem();
     }
 

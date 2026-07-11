@@ -33,15 +33,12 @@ class RawDockerfile {
     public searchInArgs(regularExpression: RegExp, commands?: string[]): RegExpMatchArray | [] {
         const commandEntries = (commands ? this.getCommandsOfType(...commands) : this.commandEntries);
         for (const entry of commandEntries) {
-            const args = Array.isArray(entry.args) ? entry.args : [ String(entry.args) ];
+            const args = Array.isArray(entry.args) ? entry.args : [String(entry.args)];
             for (const arg of args) {
                 const matches = arg.match(regularExpression);
-                if (matches && matches.length) {
-                    return matches;
-                }
+                return matches || [];
             }
         }
-
         return [];
     }
 }

@@ -19,7 +19,7 @@ export namespace ClusterExplorerV1 {
     }
 
     export interface NodeUICustomizer {
-        customize(node: ClusterExplorerNode, treeItem: vscode.TreeItem): void | Thenable<void>;
+        customize(node: ClusterExplorerNode, treeItem: vscode.TreeItem): void | Promise<void>;
     }
 
     export interface Node {
@@ -96,7 +96,7 @@ export namespace ClusterExplorerV1 {
 
     export interface NodeSource {
         at(parentFolder: string | undefined): NodeContributor;
-        if(condition: () => boolean | Thenable<boolean>): NodeSource;
+        if(condition: () => boolean | Promise<boolean>): NodeSource;
         nodes(): Promise<Node[]>;
     }
 

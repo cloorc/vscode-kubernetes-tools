@@ -42,7 +42,7 @@ export async function waitForExtension(extensionId: string): Promise<boolean> {
     });
 }
 
-export function isNonEmptyArray(value: any[]): boolean {
+export function isNonEmptyArray(value: any[] | null): boolean {
     if (value && value.length) {
         return true;
     }
